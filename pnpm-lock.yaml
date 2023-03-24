@@ -1,0 +1,7 @@
+lockfileVersion: 5.4
+
+specifiers:
+  contracts^4.8.0: link:@openzeppelin/contracts^4.8.0
+
+dependencies:
+  contracts^4.8.0: link:@openzeppelin/contracts^4.8.0
