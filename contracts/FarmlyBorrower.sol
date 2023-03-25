@@ -1,5 +1,6 @@
 pragma solidity >=0.5.0;
-import "node_modules/@openzeppelin/contracts/utils/math/SafeMath.sol";
+
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract FarmlyBorrower {
     using SafeMath for uint;
