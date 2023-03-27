@@ -3,13 +3,13 @@ pragma solidity >=0.5.0;
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "./FarmlyConfig.sol";
 
-contract FarmlyVault is ERC20 {
+contract FarmlyVault is ERC20, FarmlyConfig {
     using Math for uint;
     uint public totalBorrowed;
     uint public lastAction;
     IERC20 public token;
-    uint256 public ONE_YEAR = 365 days;
 
     constructor(IERC20 _token) ERC20("dOpticon ETH Interest Bearing", "dpETH") {
         token = _token;
@@ -47,33 +47,6 @@ contract FarmlyVault is ERC20 {
         token.transfer(msg.sender, tokenAmount);
     }
 
-    function getUtilization(
-        uint256 debt,
-        uint256 total
-    ) internal pure returns (uint256) {
-        if (total == 0) {
-            return 0;
-        }
-        return ((debt * 1e18) / total);
-    }
-
-    function getBorrowAPR(
-        uint256 debt,
-        uint256 total
-    ) public pure returns (uint256) {
-        // return 1e18 / 10;
-        if (total == 0) {
-            return 0;
-        }
-        uint256 utilization = getUtilization(debt, total);
-        if (utilization < 1e18) {
-            uint256 sqrt = 1e18 - (1e36 - utilization ** 2).sqrt();
-            return (sqrt * 3) / 2;
-        } else {
-            return (1e18 * 3) / 2;
-        }
-    }
-
     function totalToken() public view returns (uint256) {
         return token.balanceOf(address(this)) + totalBorrowed;
     }
@@ -83,9 +56,9 @@ contract FarmlyVault is ERC20 {
             uint256 timePast = block.timestamp - lastAction;
             uint256 balance = token.balanceOf(address(this)) - value;
             return
-                ((getBorrowAPR(totalBorrowed, balance) / ONE_YEAR) *
+                (getBorrowAPR(totalBorrowed, balance) *
                     timePast *
-                    totalBorrowed) / 1e18;
+                    totalBorrowed) / 100e18;
         } else {
             return 0;
         }
