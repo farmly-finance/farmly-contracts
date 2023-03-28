@@ -7,9 +7,10 @@ import "./FarmlyConfig.sol";
 
 contract FarmlyVault is ERC20, FarmlyConfig {
     using Math for uint;
+
+    IERC20 public token;
     uint public totalBorrowed;
     uint public lastAction;
-    IERC20 public token;
 
     constructor(IERC20 _token) ERC20("dOpticon ETH Interest Bearing", "dpETH") {
         token = _token;
@@ -41,6 +42,9 @@ contract FarmlyVault is ERC20, FarmlyConfig {
         );
     }
 
+    // totalSupply = ibETH
+    // totalToken = deposited ETH
+
     function withdraw(uint256 amount) public update(0) {
         uint256 tokenAmount = (amount * totalToken()) / totalSupply();
         _burn(msg.sender, amount);
@@ -54,7 +58,9 @@ contract FarmlyVault is ERC20, FarmlyConfig {
     function pendingInterest(uint256 value) public view returns (uint256) {
         if (block.timestamp > lastAction) {
             uint256 timePast = block.timestamp - lastAction;
-            uint256 balance = token.balanceOf(address(this)) - value;
+            uint256 balance = token.balanceOf(address(this)) +
+                totalBorrowed -
+                value;
             return
                 (getBorrowAPR(totalBorrowed, balance) *
                     timePast *
@@ -67,6 +73,16 @@ contract FarmlyVault is ERC20, FarmlyConfig {
     function borrow(uint256 amount) public update(amount) {
         token.transfer(msg.sender, amount);
         totalBorrowed += amount;
+    }
+
+    function close()
+        public
+        transferToken(totalBorrowed + pendingInterest(0))
+        update(totalBorrowed + pendingInterest(0))
+        returns (uint256)
+    {
+        totalBorrowed -= totalBorrowed;
+        return totalBorrowed;
     }
 
     function addBorrower() public {}
