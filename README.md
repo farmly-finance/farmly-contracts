@@ -16,7 +16,7 @@
 
 - [x] FarmlyFullMath
 
-## To do list - FarmlyVault
+### To do list - FarmlyVault
 
 - [x] Adding transferToken modifier
 - [x] Adding update modifier
