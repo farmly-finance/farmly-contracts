@@ -12,7 +12,7 @@ contract FarmlyVault is ERC20, FarmlyConfig {
     uint public totalBorrowed;
     uint public lastAction;
 
-    constructor(IERC20 _token) ERC20("dOpticon ETH Interest Bearing", "dpETH") {
+    constructor(IERC20 _token) ERC20("Farmly ETH Interest Bearing", "flyETH") {
         token = _token;
         lastAction = block.timestamp;
     }
