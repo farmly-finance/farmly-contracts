@@ -26,8 +26,8 @@
 - [x] Adding pendingInterest function
 - [x] Adding borrow function
 - [x] Adding close function
-- [ ] Adding debtShareToDebt funtion
-- [ ] Adding debtToDebtShare funtion
+- [x] Adding debtShareToDebt funtion
+- [x] Adding debtToDebtShare funtion
 - [ ] Adding addBorrower function
 - [ ] Adding removeBorrower function
 - [ ] Writing tests

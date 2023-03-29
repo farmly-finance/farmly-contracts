@@ -3,6 +3,7 @@ pragma solidity >=0.5.0;
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "./library/FarmlyFullMath.sol";
 import "./FarmlyConfig.sol";
 
 contract FarmlyVault is ERC20, FarmlyConfig {
@@ -10,6 +11,7 @@ contract FarmlyVault is ERC20, FarmlyConfig {
 
     IERC20 public token;
     uint public totalDebt;
+    uint public totalDebtShare;
     uint public lastAction;
 
     constructor(IERC20 _token) ERC20("Farmly ETH Interest Bearing", "flyETH") {
@@ -82,6 +84,16 @@ contract FarmlyVault is ERC20, FarmlyConfig {
     {
         totalDebt -= totalDebt;
         return totalDebt;
+    }
+
+    function debtShareToDebt(uint256 debtShare) public view returns (uint256) {
+        if (totalDebtShare == 0) return debtShare;
+        return FarmlyFullMath.mulDiv(debtShare, totalDebt, totalDebtShare);
+    }
+
+    function debtToDebtShare(uint256 debt) public view returns (uint256) {
+        if (totalDebtShare == 0) return debt;
+        return FarmlyFullMath.mulDiv(debt, totalDebtShare, totalDebt);
     }
 
     function addBorrower() public {}
