@@ -16,6 +16,10 @@
 
 - [x] FarmlyFullMath
 
+## Interfaces
+
+- [x] IFarmlyVault
+
 ## To do list - FarmlyVault
 
 - [x] Adding transferToken modifier
