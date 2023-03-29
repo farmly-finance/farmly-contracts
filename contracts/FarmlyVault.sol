@@ -9,7 +9,7 @@ contract FarmlyVault is ERC20, FarmlyConfig {
     using Math for uint;
 
     IERC20 public token;
-    uint public totalBorrowed;
+    uint public totalDebt;
     uint public lastAction;
 
     constructor(IERC20 _token) ERC20("Farmly ETH Interest Bearing", "flyETH") {
@@ -25,7 +25,7 @@ contract FarmlyVault is ERC20, FarmlyConfig {
     modifier update(uint256 amount) {
         if (block.timestamp > lastAction) {
             uint256 interest = pendingInterest(amount);
-            totalBorrowed += interest;
+            totalDebt += interest;
             lastAction = block.timestamp;
         }
         _;
@@ -52,19 +52,18 @@ contract FarmlyVault is ERC20, FarmlyConfig {
     }
 
     function totalToken() public view returns (uint256) {
-        return token.balanceOf(address(this)) + totalBorrowed;
+        return token.balanceOf(address(this)) + totalDebt;
     }
 
     function pendingInterest(uint256 value) public view returns (uint256) {
         if (block.timestamp > lastAction) {
             uint256 timePast = block.timestamp - lastAction;
             uint256 balance = token.balanceOf(address(this)) +
-                totalBorrowed -
+                totalDebt -
                 value;
             return
-                (getBorrowAPR(totalBorrowed, balance) *
-                    timePast *
-                    totalBorrowed) / 100e18;
+                (getBorrowAPR(totalDebt, balance) * timePast * totalDebt) /
+                100e18;
         } else {
             return 0;
         }
@@ -72,17 +71,17 @@ contract FarmlyVault is ERC20, FarmlyConfig {
 
     function borrow(uint256 amount) public update(amount) {
         token.transfer(msg.sender, amount);
-        totalBorrowed += amount;
+        totalDebt += amount;
     }
 
     function close()
         public
-        transferToken(totalBorrowed + pendingInterest(0))
-        update(totalBorrowed + pendingInterest(0))
+        transferToken(totalDebt + pendingInterest(0))
+        update(totalDebt + pendingInterest(0))
         returns (uint256)
     {
-        totalBorrowed -= totalBorrowed;
-        return totalBorrowed;
+        totalDebt -= totalDebt;
+        return totalDebt;
     }
 
     function addBorrower() public {}
