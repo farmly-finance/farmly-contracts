@@ -22,6 +22,10 @@ describe("Farmly", function () {
         const FarmlyConfig = await hre.ethers.getContractFactory("FarmlyConfig");
         const farmlyConfig = await FarmlyConfig.deploy();
 
+        const FarmlyDexExecutor = await hre.ethers.getContractFactory("FarmlyDexExecutor");
+        const farmlyDexExecutor = await FarmlyDexExecutor.deploy();
+
+
         console.log("MAKE DEPOSIT")
         console.log("------------------------------------------")
         console.log(await testToken.balanceOf(owner.address), "account eth balance")
@@ -67,6 +71,9 @@ describe("Farmly", function () {
         await farmlyVault.withdraw(depositAmount);
         console.log(await testToken.balanceOf(farmlyVault.address), "vault eth balance")
         console.log(await testToken.balanceOf(owner.address), "account eth balance")
+
+
+        //  console.log(await farmlyDexExecutor.getOptimalSwapAmount("100000000000000000000", "90000000000000000000", "7000000000000000000", "2000000000000000000", "25"))
         // assert that the value is correct
         expect(testToken, farmlyVault);
     });
