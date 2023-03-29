@@ -39,19 +39,3 @@ contract FarmlyDexExecutor {
         return ((e - b) / (2 * a));
     }
 }
-/* 
-
-  uint256 a = 9975;
-    uint256 b = uint256(19975).mul(resA);
-    uint256 _c = (amtA.mul(resB)).sub(amtB.mul(resA));
-    uint256 c = _c.mul(10000).div(amtB.add(resB)).mul(resA);
-
-    uint256 d = a.mul(c).mul(4);
-    uint256 e = AlpacaMath.sqrt(b.mul(b).add(d));
-
-    uint256 numerator = e.sub(b);
-    uint256 denominator = a.mul(2);
-
-    return numerator.div(denominator);
-
-    */
