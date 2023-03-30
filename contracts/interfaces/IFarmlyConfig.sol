@@ -6,5 +6,5 @@ interface IFarmlyConfig {
         address tokenB
     ) external view returns (address);
 
-    function getExecuter(address _executer) external view returns (bool);
+    function getExecutor(address _executor) external view returns (bool);
 }
