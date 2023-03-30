@@ -20,7 +20,8 @@
   },
   "homepage": "https://github.com/farmly-finance/farmly-contracts#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^4.8.0"
+    "@openzeppelin/contracts": "^4.8.0",
+    "dotenv": "^16.0.3"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
