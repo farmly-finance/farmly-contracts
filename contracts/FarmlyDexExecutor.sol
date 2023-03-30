@@ -55,7 +55,7 @@ contract FarmlyDexExecutor {
         IERC20 token1,
         uint256 amount0,
         uint256 amount1
-    ) public {
+    ) public returns (uint256, address) {
         IUniswapV2Pair pair = _getPair(token0, token1);
         _approve(token0, token1, MAX_INT, MAX_INT);
         (uint reserve0, uint reserve1, ) = pair.getReserves();
@@ -83,6 +83,8 @@ contract FarmlyDexExecutor {
         _transferLpToken(pair, lpAmount);
 
         _approve(token0, token1, 0, 0);
+
+        return (lpAmount, address(pair));
     }
 
     function _approve(
@@ -108,7 +110,7 @@ contract FarmlyDexExecutor {
             amount1,
             reserve0,
             reserve1,
-            25
+            30
         );
 
         address[] memory path = new address[](2);
