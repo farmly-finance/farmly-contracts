@@ -7,5 +7,5 @@ interface IFarmlyDexExecutor {
         IERC20 token1,
         uint256 amount0,
         uint256 amount1
-    ) external;
+    ) external returns (uint256, address);
 }
