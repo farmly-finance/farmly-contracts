@@ -3,7 +3,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract FarmlyConfig is Ownable {
     mapping(address => mapping(address => address)) public poolVault;
-    mapping(address => bool) public executers;
+    mapping(address => bool) public executors;
 
     function setFarmingPoolVault(
         address tokenA,
@@ -14,8 +14,8 @@ contract FarmlyConfig is Ownable {
         poolVault[tokenB][tokenA] = vault;
     }
 
-    function setExecuter(address _executer, bool _isActive) public onlyOwner {
-        executers[_executer] = _isActive;
+    function setExecutor(address _executor, bool _isActive) public onlyOwner {
+        executors[_executor] = _isActive;
     }
 
     function getFarmingPoolVault(
@@ -25,7 +25,7 @@ contract FarmlyConfig is Ownable {
         return poolVault[tokenA][tokenB];
     }
 
-    function getExecuter(address _executer) public view returns (bool) {
-        return executers[_executer];
+    function getExecutor(address _executor) public view returns (bool) {
+        return executors[_executor];
     }
 }
