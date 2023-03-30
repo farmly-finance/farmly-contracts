@@ -66,6 +66,7 @@ contract FarmlyDexExecutor {
         if (address(token0) != pair.token0()) {
             (reserve0, reserve1) = (reserve1, reserve0);
             (amount0, amount1) = (amount1, amount0);
+            (token0, token1) = (token1, token0);
         }
         _swap(
             reserve0,
