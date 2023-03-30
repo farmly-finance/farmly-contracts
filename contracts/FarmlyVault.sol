@@ -4,9 +4,9 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "./library/FarmlyFullMath.sol";
-import "./FarmlyConfig.sol";
+import "./FarmlyInterestModel.sol";
 
-contract FarmlyVault is ERC20, FarmlyConfig {
+contract FarmlyVault is ERC20, FarmlyInterestModel {
     using Math for uint;
 
     IERC20 public token;
@@ -71,9 +71,9 @@ contract FarmlyVault is ERC20, FarmlyConfig {
         }
     }
 
-    function borrow(uint256 amount) public update(amount) {
+    function borrow(uint256 amount) public update(amount) returns (uint) {
         token.transfer(msg.sender, amount);
-        totalDebt += amount;
+        return _addDebt(amount);
     }
 
     function close()
@@ -84,6 +84,13 @@ contract FarmlyVault is ERC20, FarmlyConfig {
     {
         totalDebt -= totalDebt;
         return totalDebt;
+    }
+
+    function _addDebt(uint256 debtAmount) internal returns (uint256) {
+        uint256 debtShare = debtToDebtShare(debtAmount);
+        totalDebt += debtAmount;
+        totalDebtShare += debtShare;
+        return debtShare;
     }
 
     function debtShareToDebt(uint256 debtShare) public view returns (uint256) {
