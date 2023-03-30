@@ -10,9 +10,9 @@ contract FarmlyVault is ERC20, FarmlyInterestModel {
     using Math for uint;
 
     IERC20 public token;
-    uint public totalDebt;
-    uint public totalDebtShare;
-    uint public lastAction;
+    uint256 public totalDebt;
+    uint256 public totalDebtShare;
+    uint256 public lastAction;
 
     constructor(IERC20 _token) ERC20("Farmly ETH Interest Bearing", "flyETH") {
         token = _token;
