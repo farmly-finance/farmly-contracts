@@ -1,11 +1,13 @@
 pragma solidity >=0.5.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./library/FarmlyFullMath.sol";
 import "./uniV2ForksInterfaces/IUniswapV2Router01.sol";
 import "./uniV2ForksInterfaces/IUniswapV2Factory.sol";
 import "./uniV2ForksInterfaces/IUniswapV2Pair.sol";
 
 contract FarmlyDexExecutor {
+    using SafeMath for uint;
     IUniswapV2Router01 public router;
     uint256 constant MAX_INT =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
@@ -21,7 +23,7 @@ contract FarmlyDexExecutor {
         uint256 rB,
         uint256 pF // 25
     ) internal pure returns (uint256 swapAmount, bool isAB) {
-        if (aA * rB >= aB * rA) {
+        if (aA.mul(rB) >= aB.mul(rA)) {
             swapAmount = _getOptimalSwapAmount(aA, aB, rA, rB, pF);
             isAB = false;
         } else {
@@ -37,16 +39,18 @@ contract FarmlyDexExecutor {
         uint256 rB,
         uint256 pF
     ) internal pure returns (uint256 swapAmount) {
-        require(aA * rB >= aB * rA, "BA");
-        uint256 a = 1e4 - pF;
-        uint256 b = (2e4 - pF) * rA;
-        uint256 _c = (aA * rB) - (aB * rA);
-        uint256 c = ((_c * 1e4) / (aB + rB)) * rA;
+        require(aA.mul(rB) >= aB.mul(rA), "BA");
+        uint256 a = uint256(1e4).sub(pF);
+        uint256 b = (uint256(2e4).sub(pF)).mul(rA);
+        uint256 _c = (aA.mul(rB)).sub(aB.mul(rA));
+        uint256 c = _c.mul(1e4).div(aB.add(rB)).mul(rA);
 
-        uint256 d = a * c * 4;
-        uint256 e = FarmlyFullMath.sqrt(((b * b) + d));
+        uint256 d = a.mul(c).mul(4);
+        uint256 e = FarmlyFullMath.sqrt(b.mul(b).add(d));
 
-        return ((e - b) / (2 * a));
+        uint numerator = e.sub(b);
+        uint deminator = a.mul(2);
+        return numerator.div(deminator);
     }
 
     function execute(
