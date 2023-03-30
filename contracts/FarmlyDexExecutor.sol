@@ -67,7 +67,7 @@ contract FarmlyDexExecutor {
         (uint reserve0, uint reserve1, ) = pair.getReserves();
 
         (uint256 token0Reserve, uint256 token1Reserve) = pair.token0() ==
-            address(token1)
+            address(token0)
             ? (reserve0, reserve1)
             : (reserve1, reserve0);
 
