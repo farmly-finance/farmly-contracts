@@ -27,6 +27,7 @@ async function main() {
   
     console.log((await farmlyConfig.setFarmingPoolVault(USDC, VAULT_TOKEN, farmlyVault.address)).hash, "setFarmingPoolVault");
   */
+  /*
 
   const FarmlyPositionManager = await hre.ethers.getContractFactory("FarmlyPositionManager");
   const farmlyPositionManager = await FarmlyPositionManager.deploy("0xD5Ccf53b66af850D237da0c695Bfcbd9b77f2fe4");
@@ -34,17 +35,17 @@ async function main() {
   console.log(
     `FarmlyPositionManager deployed to ${farmlyPositionManager.address}`
   );
-
-  /*
-    const FarmlyDexExecutor = await hre.ethers.getContractFactory("FarmlyDexExecutor");
-    const farmlyDexExecutor = await FarmlyDexExecutor.deploy(ROUTER);
-    await farmlyDexExecutor.deployed();
-    console.log(
-      `FarmlyDexExecutor deployed to ${farmlyDexExecutor.address}`
-    );
-    /*
-      console.log((await farmlyConfig.setExecutor(farmlyDexExecutor.address, "true")).hash, "setExecutor");
     */
+
+  const FarmlyDexExecutor = await hre.ethers.getContractFactory("FarmlyDexExecutor");
+  const farmlyDexExecutor = await FarmlyDexExecutor.deploy(ROUTER);
+  await farmlyDexExecutor.deployed();
+  console.log(
+    `FarmlyDexExecutor deployed to ${farmlyDexExecutor.address}`
+  );
+  /*
+    console.log((await farmlyConfig.setExecutor(farmlyDexExecutor.address, "true")).hash, "setExecutor");
+  */
 }
 
 // We recommend this pattern to be able to use async/await everywhere
