@@ -1,12 +1,11 @@
 pragma solidity >=0.5.0;
-import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./library/FarmlyFullMath.sol";
 import "./uniV2ForksInterfaces/IUniswapV2Router01.sol";
 import "./uniV2ForksInterfaces/IUniswapV2Factory.sol";
 import "./uniV2ForksInterfaces/IUniswapV2Pair.sol";
 
 contract FarmlyDexExecutor {
-    using Math for uint;
     IUniswapV2Router01 public router;
     uint256 constant MAX_INT =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
@@ -45,14 +44,14 @@ contract FarmlyDexExecutor {
         uint256 c = ((_c * 1e4) / (aB + rB)) * rA;
 
         uint256 d = a * c * 4;
-        uint256 e = ((b * b) + d).sqrt();
+        uint256 e = FarmlyFullMath.sqrt(((b * b) + d));
 
         return ((e - b) / (2 * a));
     }
 
     function execute(
-        IERC20 token0,
-        IERC20 token1,
+        IERC20 token0, // vault token
+        IERC20 token1, // debt token
         uint256 amount0,
         uint256 amount1
     ) public returns (uint256, address) {
@@ -63,18 +62,18 @@ contract FarmlyDexExecutor {
         _approve(token0, token1, MAX_INT, MAX_INT);
         (uint reserve0, uint reserve1, ) = pair.getReserves();
 
-        if (address(token0) != pair.token0()) {
-            (reserve0, reserve1) = (reserve1, reserve0);
-            (amount0, amount1) = (amount1, amount0);
-            (token0, token1) = (token1, token0);
-        }
+        (uint256 token0Reserve, uint256 token1Reserve) = pair.token0() ==
+            address(token1)
+            ? (reserve0, reserve1)
+            : (reserve1, reserve0);
+
         _swap(
-            reserve0,
-            reserve1,
+            token0Reserve,
+            token1Reserve,
             address(token0),
             address(token1),
-            amount0,
-            amount1
+            token0.balanceOf(address(this)),
+            token1.balanceOf(address(this))
         );
 
         uint lpAmount = _addLiquidity(
@@ -114,11 +113,11 @@ contract FarmlyDexExecutor {
             amount1,
             reserve0,
             reserve1,
-            30
+            20
         );
 
         address[] memory path = new address[](2);
-        (path[0], path[1]) = isAB ? (token0, token1) : (token1, token0);
+        (path[0], path[1]) = isAB ? (token1, token0) : (token0, token1);
 
         if (swapAmount > 0)
             router.swapExactTokensForTokens(
