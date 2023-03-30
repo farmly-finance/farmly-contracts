@@ -44,7 +44,7 @@ contract FarmlyVault is ERC20, FarmlyInterestModel {
         );
     }
 
-    // totalSupply = ibETH
+    // totalSupply = flyETH
     // totalToken = deposited ETH
 
     function withdraw(uint256 amount) public update(0) {
