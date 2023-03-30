@@ -6,7 +6,7 @@ module.exports = {
   networks: {
     arbitrumOne: {
       url: "https://arb1.arbitrum.io/rpc",
-      //accounts: [ARBITRUM_MAINNET_TEMPORARY_PRIVATE_KEY]
+      accounts: [process.env.DEPLOYER_KEY]
     }
   }
 };
