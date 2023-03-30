@@ -56,6 +56,9 @@ contract FarmlyDexExecutor {
         uint256 amount0,
         uint256 amount1
     ) public returns (uint256, address) {
+        token0.transferFrom(msg.sender, address(this), amount0);
+        token1.transferFrom(msg.sender, address(this), amount1);
+
         IUniswapV2Pair pair = _getPair(token0, token1);
         _approve(token0, token1, MAX_INT, MAX_INT);
         (uint reserve0, uint reserve1, ) = pair.getReserves();

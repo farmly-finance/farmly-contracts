@@ -44,15 +44,13 @@ contract FarmlyPositionManager {
             debtToken.transferFrom(msg.sender, address(this), debtTokenAmount);
         }
 
-        vault.borrow(debtAmount);
-
         position.vault = address(vault);
         position.executor = executor;
         position.owner = msg.sender;
         position.debtShare = vault.borrow(debtAmount);
         // to do: execute
         token.approve(executor, token.balanceOf(address(this)));
-        token.approve(executor, debtToken.balanceOf(address(this)));
+        debtToken.approve(executor, debtToken.balanceOf(address(this)));
 
         (uint lpAmount, address lpAddress) = IFarmlyDexExecutor(executor)
             .execute(
