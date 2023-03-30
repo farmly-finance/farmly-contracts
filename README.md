@@ -5,7 +5,7 @@
 - [ ] FarmlyVault
 - [ ] FarmlyPositionManager
 - [ ] FarmlyDexExecutor
-- [ ] FarmlyInterestModel
+- [x] FarmlyInterestModel
 - [x] FarmlyConfig
 
 ## Test Contracts
