@@ -63,7 +63,8 @@ contract FarmlyDexExecutor {
         token1.transferFrom(msg.sender, address(this), amount1);
 
         IUniswapV2Pair pair = _getPair(token0, token1);
-        _approve(token0, token1, MAX_INT, MAX_INT);
+        _approve(token0, MAX_INT);
+        _approve(token1, MAX_INT);
         (uint reserve0, uint reserve1, ) = pair.getReserves();
 
         (uint256 token0Reserve, uint256 token1Reserve) = pair.token0() ==
@@ -89,19 +90,62 @@ contract FarmlyDexExecutor {
 
         _transferLpToken(pair, lpAmount);
 
-        _approve(token0, token1, 0, 0);
+        _approve(token0, 0);
+        _approve(token1, 0);
 
         return (lpAmount, address(pair));
     }
 
-    function _approve(
-        IERC20 token0,
-        IERC20 token1,
-        uint amount0,
-        uint amount1
-    ) internal {
-        token0.approve(address(router), amount0);
-        token1.approve(address(router), amount1);
+    function close(
+        address debtToken,
+        address lpToken,
+        uint debtAmount
+    ) public returns (address, address, uint, uint) {
+        address token0 = IUniswapV2Pair(lpToken).token0();
+        address token1 = IUniswapV2Pair(lpToken).token1();
+
+        _approve(IERC20(lpToken), MAX_INT);
+        _approve(IERC20(token0), MAX_INT);
+        _approve(IERC20(token1), MAX_INT);
+
+        (uint amount0, uint amount1) = _removeLiquidity(
+            token0,
+            token1,
+            IERC20(lpToken).balanceOf(address(this))
+        );
+
+        if (debtToken != token1) {
+            (token0, token1) = (token1, token0);
+            (amount0, amount1) = (amount1, amount0);
+        }
+
+        if (debtAmount > amount1) {
+            address[] memory path = new address[](2);
+            path[0] = token0;
+            path[1] = token1;
+            uint remainingDebt = debtAmount.sub(amount1);
+            uint[] memory amounts = router.swapTokensForExactTokens(
+                remainingDebt,
+                amount0,
+                path,
+                address(this),
+                block.timestamp
+            );
+            amount0 = amount0.sub(amounts[0]);
+            amount1 = amount1.sub(amounts[1]);
+        }
+
+        IERC20(token0).transfer(msg.sender, amount0);
+        IERC20(token1).transfer(msg.sender, amount1);
+
+        _approve(IERC20(lpToken), 0);
+        _approve(IERC20(token0), 0);
+        _approve(IERC20(token1), 0);
+        return (token0, token1, amount0, amount1);
+    }
+
+    function _approve(IERC20 token, uint amount) internal {
+        token.approve(address(router), amount);
     }
 
     function _swap(
@@ -156,7 +200,23 @@ contract FarmlyDexExecutor {
         lpToken.transfer(msg.sender, amount);
     }
 
-    function _removeLiquidity() internal {}
+    function _removeLiquidity(
+        address token0,
+        address token1,
+        uint lpAmount
+    ) internal returns (uint, uint) {
+        (uint amount0, uint amount1) = router.removeLiquidity(
+            token0,
+            token1,
+            lpAmount,
+            0,
+            0,
+            address(this),
+            block.timestamp
+        );
+
+        return (amount0, amount1);
+    }
 
     function _getPair(
         IERC20 token0,

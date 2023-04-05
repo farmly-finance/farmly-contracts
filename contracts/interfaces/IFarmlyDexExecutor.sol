@@ -8,4 +8,8 @@ interface IFarmlyDexExecutor {
         uint256 amount0,
         uint256 amount1
     ) external returns (uint256, address);
+
+    function close(
+        address lpToken
+    ) external returns (address, address, uint, uint);
 }

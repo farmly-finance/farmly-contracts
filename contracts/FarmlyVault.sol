@@ -76,14 +76,15 @@ contract FarmlyVault is ERC20, FarmlyInterestModel {
         return _addDebt(amount);
     }
 
-    function close()
+    function close(
+        uint256 debtShare
+    )
         public
-        transferToken(totalDebt + pendingInterest(0))
-        update(totalDebt + pendingInterest(0))
+        update(pendingInterest(0))
+        transferToken(debtShareToDebt(debtShare))
         returns (uint256)
     {
-        totalDebt -= totalDebt;
-        return totalDebt;
+        return _removeDebt(debtShare);
     }
 
     function _addDebt(uint256 debtAmount) internal returns (uint256) {
@@ -91,6 +92,13 @@ contract FarmlyVault is ERC20, FarmlyInterestModel {
         totalDebt += debtAmount;
         totalDebtShare += debtShare;
         return debtShare;
+    }
+
+    function _removeDebt(uint256 debtShare) internal returns (uint256) {
+        uint256 debt = debtShareToDebt(debtShare);
+        totalDebtShare -= debtShare;
+        totalDebt -= debt;
+        return debt;
     }
 
     function debtShareToDebt(uint256 debtShare) public view returns (uint256) {
