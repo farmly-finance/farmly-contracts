@@ -59,7 +59,7 @@ contract FarmlyPositionManager {
         address executor
     ) public {
         require(farmlyConfig.getExecutor(executor), "INVALID EXECUTOR");
-        Position storage position = positions[nextPositionID];
+        Position storage position = positions[positionID];
         _createPosition(
             position,
             position.vaultToken,
