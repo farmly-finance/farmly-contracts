@@ -124,16 +124,19 @@ contract FarmlyDexExecutor {
             path[0] = token0;
             path[1] = token1;
             uint remainingDebt = debtAmount.sub(amount1);
-            uint[] memory amounts = router.swapTokensForExactTokens(
+            router.swapTokensForExactTokens(
                 remainingDebt,
                 amount0,
                 path,
                 address(this),
                 block.timestamp
             );
-            amount0 = amount0.sub(amounts[0]);
-            amount1 = amount1.sub(amounts[1]);
         }
+
+        (amount0, amount1) = (
+            IERC20(token0).balanceOf(address(this)),
+            IERC20(token1).balanceOf(address(this))
+        );
 
         IERC20(token0).transfer(msg.sender, amount0);
         IERC20(token1).transfer(msg.sender, amount1);

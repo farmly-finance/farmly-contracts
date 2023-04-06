@@ -1,5 +1,6 @@
 pragma solidity >=0.5.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./library/FarmlyFullMath.sol";
 import "./interfaces/IFarmlyVault.sol";
 import "./interfaces/IFarmlyConfig.sol";
 import "./interfaces/IFarmlyDexExecutor.sol";
@@ -89,7 +90,11 @@ contract FarmlyPositionManager {
             address token1,
             uint amount0,
             uint amount1
-        ) = IFarmlyDexExecutor(position.lpAddress).close(position.lpAddress);
+        ) = IFarmlyDexExecutor(position.executor).close(
+                address(position.debtToken),
+                position.lpAddress,
+                _getDebtAmount(IFarmlyVault(position.vault), position.debtShare)
+            );
         IERC20(token1).approve(position.vault, MAX_INT);
         uint paidDebt = IFarmlyVault(position.vault).close(position.debtShare);
         amount1 -= paidDebt;
@@ -134,5 +139,16 @@ contract FarmlyPositionManager {
         address tokenB
     ) internal view returns (IFarmlyVault) {
         return IFarmlyVault(farmlyConfig.getFarmingPoolVault(tokenA, tokenB));
+    }
+
+    function _getDebtAmount(
+        IFarmlyVault vault,
+        uint debtShare
+    ) internal view returns (uint) {
+        uint totalDebt = vault.totalDebt();
+        uint totalDebtShare = vault.totalDebtShare();
+        uint pendingInterest = vault.pendingInterest(0);
+        totalDebt += pendingInterest;
+        return FarmlyFullMath.mulDiv(debtShare, totalDebt, totalDebtShare);
     }
 }

@@ -80,7 +80,7 @@ contract FarmlyVault is ERC20, FarmlyInterestModel {
         uint256 debtShare
     )
         public
-        update(pendingInterest(0))
+        update(0)
         transferToken(debtShareToDebt(debtShare))
         returns (uint256)
     {
