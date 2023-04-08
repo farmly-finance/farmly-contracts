@@ -21,6 +21,8 @@
   "homepage": "https://github.com/farmly-finance/farmly-contracts#readme",
   "dependencies": {
     "@openzeppelin/contracts": "^4.8.0",
+    "@uniswap/v3-periphery": "github:Uniswap/v3-periphery#0.8",
+    "big.js": "^6.2.1",
     "dotenv": "^16.0.3"
   },
   "devDependencies": {
