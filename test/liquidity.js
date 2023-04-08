@@ -8,13 +8,21 @@ function toSqrtRatioX96(val) {
 
 describe("Liquidity", function () {
     it("...", async function () {
-        let sqrtRatioX96 = toSqrtRatioX96(1e12 / 1850); // 1850
-        const sqrtRatioAX96 = toSqrtRatioX96(1e12 / 1750); // 1750
-        const sqrtRatioBX96 = toSqrtRatioX96(1e12 / 2000); // 2000
+        let sqrtRatioX96 = toSqrtRatioX96(1e18 / (1849.68 * 1e6)); // 1850
+        const sqrtRatioAX96 = toSqrtRatioX96(1e18 / (2000.2 * 1e6)); // 2000
+        const sqrtRatioBX96 = toSqrtRatioX96(1e18 / (1749.4 * 1e6)); // 1750
         console.log(sqrtRatioX96, sqrtRatioAX96, sqrtRatioBX96)
-        const amount0 = "1325759297"
-        const amount1 = "1000000000000000000"
 
+        const LiquidityAmountsLib = await hre.ethers.getContractFactory("LiquidityAmountsLib");
+        const liquidityAmountsLib = await LiquidityAmountsLib.deploy();
+
+        const am0 = await liquidityAmountsLib.getAmountsForAddingLiquidity(1849.68 * 1e6, sqrtRatioX96, sqrtRatioAX96, sqrtRatioBX96, "10000000000", "10000000000000000000", "6", "18")
+        console.log(am0);
+
+
+    });
+
+    /* 
         const begin = 1325.75 + (1850)
         console.log(1850, begin, "totalPositionValue", 0)
         console.log("---------------------------------------------")
@@ -24,8 +32,7 @@ describe("Liquidity", function () {
         console.log("---------------------------------------------")
         console.log("---------------------------------------------")
         console.log("---------------------------------------------")
-        const LiquidityAmountsLib = await hre.ethers.getContractFactory("LiquidityAmountsLib");
-        const liquidityAmountsLib = await LiquidityAmountsLib.deploy();
+    
         const liquidity = await liquidityAmountsLib.getLiquidityForAmounts(sqrtRatioX96, sqrtRatioAX96, sqrtRatioBX96, amount0, amount1)
 
         for (let i = 1740; i <= 2010; i += 10) {
@@ -41,22 +48,5 @@ describe("Liquidity", function () {
             console.log(i, (3.42167567568 * i).toFixed(2), "totalDebt", (3.42167567568 * i / totalPositionValue3X) > 0.87 ? "liquidated" : (3.42167567568 * i / totalPositionValue3X).toFixed(4), "debtRatio")
             console.log("---------------------------------------------")
         }
-
-    });
-
-    /* 
-       uint160 sqrtRatioX96,
-        uint160 sqrtRatioAX96,
-        uint160 sqrtRatioBX96,
-        uint256 amount0,
-        uint256 amount1
-
-
-
-
-           uint160 sqrtRatioX96,
-        uint160 sqrtRatioAX96,
-        uint160 sqrtRatioBX96,
-        uint128 liquidity
     */
 });
