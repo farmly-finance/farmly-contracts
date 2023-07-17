@@ -11,7 +11,7 @@ async function main() {
     const depositAmount = "100000000000000000000000"
 
 
-    const IERC20 = await ethers.getContractFactory("TestToken");
+    const IERC20 = await ethers.getContractFactory("TestUSDC");
     const vaultToken = await IERC20.attach(
         process.env.VAULT_TOKEN
     );
@@ -22,8 +22,18 @@ async function main() {
     );
 
 
-    console.log((await vaultToken.approve(farmlyVault.address, depositAmount)).hash, "approved for 100k tokens")
-    console.log((await farmlyVault.deposit(depositAmount)).hash, "deposited 100k tokens")
+    const vaultToken_2 = await IERC20.attach(
+        process.env.VAULT_TOKEN_2
+    );
+    const farmlyVault_2 = await FarmlyVault.attach(
+        process.env.FARMLY_VAULT_2_CONTRACT_ADDRESS
+    );
+
+    //  console.log((await vaultToken.approve(farmlyVault.address, depositAmount)).hash, "approved for 100k tokens")
+    //  console.log((await farmlyVault.deposit(depositAmount)).hash, "deposited 100k tokens")
+
+    //  console.log((await vaultToken_2.approve(farmlyVault_2.address, depositAmount)).hash, "approved for 100k tokens")
+    //  console.log((await farmlyVault_2.deposit(depositAmount)).hash, "deposited 100k tokens")
 
 }
 

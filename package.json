@@ -21,6 +21,7 @@
   "homepage": "https://github.com/farmly-finance/farmly-contracts#readme",
   "dependencies": {
     "@openzeppelin/contracts": "^4.8.0",
+    "@uniswap/v3-core": "github:Uniswap/v3-core#0.8",
     "@uniswap/v3-periphery": "github:Uniswap/v3-periphery#0.8",
     "big.js": "^6.2.1",
     "dotenv": "^16.0.3"
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
     "@nomiclabs/hardhat-web3": "^2.0.0",
+    "@tenderly/hardhat-tenderly": "^1.7.0",
     "hardhat": "^2.13.0",
     "web3": "^1.9.0"
   }

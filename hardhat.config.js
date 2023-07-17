@@ -3,8 +3,27 @@ require('dotenv').config();
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: "0.8.15",
+  solidity:
+  {
+    version: "0.8.15",
+    settings: {
+      // See the solidity docs for advice about optimization and evmVersion
+      optimizer: {
+        enabled: true,
+        runs: 2000,
+      },
+      //  evmVersion: "byzantium"
+    },
+  },
+
   networks: {
+    localhost: {
+      url: "http://127.0.0.1:8545",
+      allowUnlimitedContractSize: true,
+    },
+    hardhat: {
+      allowUnlimitedContractSize: true,
+    },
     arbitrumOne: {
       url: "https://arb1.arbitrum.io/rpc",
       accounts: [process.env.DEPLOYER_KEY]
@@ -15,6 +34,12 @@ module.exports = {
       gasPrice: 20000000000,
       gas: 3000000,
       accounts: [process.env.DEPLOYER_KEY]
+    },
+    goerli: {
+      url: "https://rpc.ankr.com/eth_goerli",
+      chainId: 5,
+      accounts: [process.env.DEPLOYER_KEY],
+      gas: 3000000
     },
   }
 };

@@ -15,7 +15,7 @@ async function main() {
     );
 
 
-    console.log(await farmlyPositionManager.getPositionInfo("1"), "positionInfo");
+    console.log(await farmlyPositionManager.positions("1"), "positionInfo");
 
 
 }

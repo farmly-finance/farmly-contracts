@@ -8,16 +8,18 @@ function toSqrtRatioX96(val) {
 
 describe("Liquidity", function () {
     it("...", async function () {
-        let sqrtRatioX96 = toSqrtRatioX96(1e18 / (1849.68 * 1e6)); // 1850
-        const sqrtRatioAX96 = toSqrtRatioX96(1e18 / (2000.2 * 1e6)); // 2000
-        const sqrtRatioBX96 = toSqrtRatioX96(1e18 / (1749.4 * 1e6)); // 1750
+        let sqrtRatioX96 = toSqrtRatioX96((1189.06)); // 1850
+
+        const sqrtRatioAX96 = toSqrtRatioX96((999.9));
+        const sqrtRatioBX96 = toSqrtRatioX96((1400.6));
         console.log(sqrtRatioX96, sqrtRatioAX96, sqrtRatioBX96)
 
         const LiquidityAmountsLib = await hre.ethers.getContractFactory("LiquidityAmountsLib");
         const liquidityAmountsLib = await LiquidityAmountsLib.deploy();
+        // 5.000 5
+        const am0 = await liquidityAmountsLib.getAmountsForAddingLiquidity((Math.round((1 / (1189.06)) * 1e18)).toLocaleString('fullwide', { useGrouping: false }), sqrtRatioX96, sqrtRatioAX96, sqrtRatioBX96, "5000000000000000000", "5000000000000000000000", "18", "18")
+        console.log(am0[0] / 1e18, am0[1] / 1e18);
 
-        const am0 = await liquidityAmountsLib.getAmountsForAddingLiquidity(1849.68 * 1e6, sqrtRatioX96, sqrtRatioAX96, sqrtRatioBX96, "10000000000", "10000000000000000000", "6", "18")
-        console.log(am0);
 
 
     });

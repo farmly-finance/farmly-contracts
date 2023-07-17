@@ -8,23 +8,11 @@ const hre = require("hardhat");
 require('dotenv').config();
 
 async function main() {
-    const debtTokenAmount = "5000000000000000000000"
-    const tokenAmount = "5000000000000000000000"
+
+    const factory = await ethers.getContractAt("IUniswapV3Factory", process.env.UNISWAP_V3_FACTORY_CONTRACT_ADDRESS);
 
 
-    const IERC20 = await ethers.getContractFactory("TestToken");
-    const vaultToken = await IERC20.attach(
-        process.env.VAULT_TOKEN
-    );
-
-    const baseToken = await IERC20.attach(
-        process.env.BASE_TOKEN
-    );
-
-
-    console.log((await vaultToken.approve(process.env.FARMLY_POSITION_MANAGER_CONTRACT_ADDRESS, debtTokenAmount)).hash, "approve debtTokenAmount")
-    console.log((await baseToken.approve(process.env.FARMLY_POSITION_MANAGER_CONTRACT_ADDRESS, tokenAmount)).hash, "approve tokenAmount")
-
+    console.log((await factory.getPool(process.env.VAULT_TOKEN, process.env.VAULT_TOKEN_2, "500")), "pool")
 
 }
 

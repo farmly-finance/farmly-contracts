@@ -1,205 +1,189 @@
 pragma solidity >=0.5.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./library/FarmlyFullMath.sol";
+import "./library/FarmlyStructs.sol";
 import "./interfaces/IFarmlyVault.sol";
-import "./interfaces/IFarmlyConfig.sol";
-import "./interfaces/IFarmlyDexExecutor.sol";
+import "./interfaces/IFarmlyUniV3Executor.sol";
 
 contract FarmlyPositionManager {
+    struct VaultInfo {
+        IFarmlyVault vault;
+        uint debtAmount;
+    }
+
+    struct DebtInfo {
+        VaultInfo vault;
+        uint debtShare;
+    }
+
     struct Position {
-        address vault;
-        address executor;
+        uint uniV3PositionID;
         address owner;
-        uint256 debtShare;
-        uint256 lpAmount;
-        address lpAddress;
-        IERC20 vaultToken;
-        IERC20 debtToken;
+        DebtInfo debt0;
+        DebtInfo debt1;
     }
 
     mapping(uint256 => Position) public positions;
+    mapping(address => uint256[]) public userPositions;
     uint256 public nextPositionID = 1;
-    IFarmlyConfig public farmlyConfig;
-    uint256 public totalLpAmount;
+
     uint256 constant MAX_INT =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
-    constructor(address _farmlyConfig) {
-        farmlyConfig = IFarmlyConfig(_farmlyConfig);
-    }
-
     function createPosition(
-        IERC20 token,
-        IERC20 debtToken,
-        uint256 tokenAmount,
-        uint256 debtTokenAmount,
-        uint256 debtAmount,
-        address executor
+        IFarmlyUniV3Executor executor,
+        uint amount0,
+        uint amount1,
+        VaultInfo memory vault0,
+        VaultInfo memory vault1,
+        FarmlyStructs.PositionInfo memory positionInfo,
+        FarmlyStructs.SwapInfo memory swapInfo
     ) public {
-        require(farmlyConfig.getExecutor(executor), "INVALID EXECUTOR");
-        Position storage position = positions[nextPositionID];
-        _createPosition(
-            position,
-            token,
-            debtToken,
-            tokenAmount,
-            debtTokenAmount,
-            debtAmount,
-            executor,
-            true
+        positionInfo.token0.transferFrom(msg.sender, address(this), amount0);
+        positionInfo.token1.transferFrom(msg.sender, address(this), amount1);
+        uint debtShare0 = vault0.vault.borrow(vault0.debtAmount);
+        uint debtShare1 = vault1.vault.borrow(vault1.debtAmount);
+        positionInfo.token0.approve(
+            address(executor),
+            amount0 + vault0.debtAmount
         );
+        positionInfo.token1.approve(
+            address(executor),
+            amount1 + vault1.debtAmount
+        );
+        uint256 tokenId = executor.execute(
+            msg.sender,
+            amount0 + vault0.debtAmount,
+            amount1 + vault1.debtAmount,
+            positionInfo,
+            swapInfo
+        );
+
+        positions[nextPositionID] = Position(
+            tokenId,
+            msg.sender,
+            DebtInfo(vault0, debtShare0),
+            DebtInfo(vault1, debtShare1)
+        );
+
+        userPositions[msg.sender].push(nextPositionID);
+
         nextPositionID++;
     }
 
-    function addCollectral(
+    function increasePosition(
         uint256 positionID,
-        uint256 tokenAmount,
-        uint256 debtTokenAmount,
-        uint256 debtAmount,
-        address executor
+        IFarmlyUniV3Executor executor,
+        uint amount0,
+        uint amount1,
+        VaultInfo memory vault0,
+        VaultInfo memory vault1,
+        FarmlyStructs.PositionInfo memory positionInfo,
+        FarmlyStructs.SwapInfo memory swapInfo
     ) public {
-        require(farmlyConfig.getExecutor(executor), "INVALID EXECUTOR");
         Position storage position = positions[positionID];
-        _createPosition(
-            position,
-            position.vaultToken,
-            position.debtToken,
-            tokenAmount,
-            debtTokenAmount,
-            debtAmount,
-            executor,
-            false
+        positionInfo.token0.transferFrom(msg.sender, address(this), amount0);
+        positionInfo.token1.transferFrom(msg.sender, address(this), amount1);
+        uint debtShare0 = vault0.vault.borrow(vault0.debtAmount);
+        uint debtShare1 = vault1.vault.borrow(vault1.debtAmount);
+        positionInfo.token0.approve(
+            address(executor),
+            amount0 + vault0.debtAmount
         );
+        positionInfo.token1.approve(
+            address(executor),
+            amount1 + vault1.debtAmount
+        );
+
+        executor.increase(
+            position.uniV3PositionID,
+            msg.sender,
+            amount0 + vault0.debtAmount,
+            amount1 + vault1.debtAmount,
+            positionInfo,
+            swapInfo
+        );
+
+        position.debt0.debtShare += debtShare0;
+        position.debt1.debtShare += debtShare1;
+        position.debt0.vault.debtAmount += vault0.debtAmount;
+        position.debt1.vault.debtAmount += vault1.debtAmount;
     }
 
-    function closePosition(uint positionID) public {
-        Position storage position = positions[positionID];
-        _closePosition(position, position.lpAmount);
-    }
-
-    function partiallyClosePosition(uint positionID, uint lpAmount) public {
-        Position storage position = positions[positionID];
-        _closePosition(position, lpAmount);
-    }
-
-    function getPositionInfo(
-        uint positionId
+    function collectFees(
+        IFarmlyUniV3Executor executor,
+        uint256 positionID
     )
         public
-        view
-        returns (
-            address,
-            address,
-            address,
-            uint256,
-            uint256,
-            address,
-            IERC20,
-            IERC20
-        )
+        returns (bytes memory _data, bytes memory _response, uint256, uint256)
     {
-        Position memory position = positions[positionId];
-        return (
-            position.vault,
-            position.executor,
-            position.owner,
-            position.debtShare,
-            position.lpAmount,
-            position.lpAddress,
-            position.vaultToken,
-            position.debtToken
-        );
-    }
-
-    function _getFarmingPoolVault(
-        address tokenA,
-        address tokenB
-    ) internal view returns (IFarmlyVault) {
-        return IFarmlyVault(farmlyConfig.getFarmingPoolVault(tokenA, tokenB));
-    }
-
-    function _getDebtAmount(
-        IFarmlyVault vault,
-        uint debtShare
-    ) internal view returns (uint) {
-        uint totalDebt = vault.totalDebt();
-        uint totalDebtShare = vault.totalDebtShare();
-        uint pendingInterest = vault.pendingInterest(0);
-        totalDebt += pendingInterest;
-        return FarmlyFullMath.mulDiv(debtShare, totalDebt, totalDebtShare);
-    }
-
-    function _closePosition(Position storage position, uint lpAmount) internal {
-        IERC20(position.lpAddress).transfer(position.executor, lpAmount);
-
+        Position storage position = positions[positionID];
         (
+            uint256 amount0,
+            uint256 amount1,
             address token0,
-            address token1,
-            uint amount0,
-            uint amount1
-        ) = IFarmlyDexExecutor(position.executor).close(
-                address(position.debtToken),
-                position.lpAddress,
-                _getDebtAmount(IFarmlyVault(position.vault), position.debtShare)
-            );
-        IERC20(token1).approve(position.vault, MAX_INT);
-        uint paidDebt = IFarmlyVault(position.vault).close(position.debtShare);
-        amount1 -= paidDebt;
-        position.debtShare = 0;
-        position.lpAmount -= lpAmount;
+            address token1
+        ) = executor.collect(position.uniV3PositionID);
         IERC20(token0).transfer(msg.sender, amount0);
         IERC20(token1).transfer(msg.sender, amount1);
-        IERC20(token1).approve(position.vault, 0);
     }
 
-    function _createPosition(
-        Position storage position,
-        IERC20 token,
-        IERC20 debtToken,
-        uint256 tokenAmount,
-        uint256 debtTokenAmount,
-        uint256 debtAmount,
-        address executor,
-        bool isNew
-    ) internal {
-        IFarmlyVault vault = _getFarmingPoolVault(
-            address(token),
-            address(debtToken)
+    function closePosition(
+        IFarmlyUniV3Executor executor,
+        uint256 positionID
+    ) public {
+        Position storage position = positions[positionID];
+
+        uint256 debt0 = position.debt0.vault.vault.debtShareToDebt(
+            position.debt0.debtShare
         );
-        if (tokenAmount > 0) {
-            token.transferFrom(msg.sender, address(this), tokenAmount);
-        }
-        if (debtTokenAmount > 0) {
-            debtToken.transferFrom(msg.sender, address(this), debtTokenAmount);
-        }
+        uint256 debt1 = position.debt1.vault.vault.debtShareToDebt(
+            position.debt1.debtShare
+        );
 
-        position.debtShare += vault.borrow(debtAmount);
-        token.approve(executor, token.balanceOf(address(this)));
-        debtToken.approve(executor, debtToken.balanceOf(address(this)));
+        (
+            uint256 amount0,
+            uint256 amount1,
+            ,
+            address token0,
+            address token1,
 
-        (uint lpAmount, address lpAddress) = IFarmlyDexExecutor(executor)
-            .execute(
-                token,
-                debtToken,
-                token.balanceOf(address(this)),
-                debtToken.balanceOf(address(this))
+        ) = executor.close(position.uniV3PositionID, debt0, debt1);
+
+        IERC20(token0).approve(address(position.debt0.vault.vault), amount0);
+        IERC20(token1).approve(address(position.debt1.vault.vault), amount1);
+
+        position.debt0.vault.vault.close(position.debt0.debtShare);
+        position.debt1.vault.vault.close(position.debt1.debtShare);
+
+        IERC20(token0).transfer(msg.sender, amount0 - debt0);
+        IERC20(token1).transfer(msg.sender, amount1 - debt1);
+
+        position.debt0.debtShare = 0;
+        position.debt1.debtShare = 0;
+        position.debt0.vault.debtAmount = 0;
+        position.debt1.vault.debtAmount = 0;
+    }
+
+    function multicall(
+        bytes[] calldata data
+    ) public returns (bytes[] memory results) {
+        results = new bytes[](data.length);
+        for (uint256 i = 0; i < data.length; i++) {
+            (bool success, bytes memory result) = address(this).delegatecall(
+                data[i]
             );
 
-        if (isNew) {
-            position.vault = address(vault);
-            position.executor = executor;
-            position.owner = msg.sender;
-            position.lpAddress = lpAddress;
-            position.vaultToken = token;
-            position.debtToken = debtToken;
+            if (!success) {
+                // Next 5 lines from https://ethereum.stackexchange.com/a/83577
+                if (result.length < 68) revert();
+                assembly {
+                    result := add(result, 0x04)
+                }
+                revert(abi.decode(result, (string)));
+            }
+
+            results[i] = result;
         }
-
-        position.lpAmount += lpAmount;
-        totalLpAmount += lpAmount;
-
-        if (token.balanceOf(address(this)) > 0)
-            token.transfer(msg.sender, token.balanceOf(address(this)));
-        if (debtToken.balanceOf(address(this)) > 0)
-            debtToken.transfer(msg.sender, debtToken.balanceOf(address(this)));
     }
 }

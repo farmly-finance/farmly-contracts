@@ -88,7 +88,7 @@ contract LiquidityAmountsLib {
     }
 
     function getAmountsForAddingLiquidity(
-        uint160 price,
+        uint256 price,
         uint160 sqrtRatioX96,
         uint160 sqrtRatioAX96,
         uint160 sqrtRatioBX96,

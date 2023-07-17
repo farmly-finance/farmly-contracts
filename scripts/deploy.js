@@ -8,13 +8,29 @@ const hre = require("hardhat");
 require('dotenv').config();
 
 async function main() {
+  /* 
+    const TestUSDC = await hre.ethers.getContractFactory("TestUSDC");
+    const testUSDC = await TestUSDC.deploy();
+    await testUSDC.deployed();
+    console.log(
+      `TestUSDC deployed to ${testUSDC.address}`
+    );
+  
+    const TestWETH = await hre.ethers.getContractFactory("TestWETH");
+    const testWETH = await TestWETH.deploy();
+    await testWETH.deployed();
+    console.log(
+      `TestWETH deployed to ${testWETH.address}`
+    );
+  
+    const FarmlyConfig = await hre.ethers.getContractFactory("FarmlyConfig");
+    const farmlyConfig = await FarmlyConfig.deploy();
+    await farmlyConfig.deployed();
+    console.log(
+      `FarmlyConfig deployed to ${farmlyConfig.address}`
+    );
+  
 
-  const FarmlyConfig = await hre.ethers.getContractFactory("FarmlyConfig");
-  const farmlyConfig = await FarmlyConfig.deploy();
-  await farmlyConfig.deployed();
-  console.log(
-    `FarmlyConfig deployed to ${farmlyConfig.address}`
-  );
 
   const FarmlyVault = await hre.ethers.getContractFactory("FarmlyVault");
   const farmlyVault = await FarmlyVault.deploy(process.env.VAULT_TOKEN);
@@ -23,23 +39,30 @@ async function main() {
     `FarmlyVault deployed to ${farmlyVault.address}`
   );
 
-  console.log((await farmlyConfig.setFarmingPoolVault(process.env.BASE_TOKEN, process.env.VAULT_TOKEN, farmlyVault.address)).hash, "setFarmingPoolVault");
+
+  const FarmlyVault2 = await hre.ethers.getContractFactory("FarmlyVault");
+  const farmlyVault2 = await FarmlyVault2.deploy(process.env.VAULT_TOKEN_2);
+  await farmlyVault2.deployed();
+  console.log(
+    `FarmlyVault2 deployed to ${farmlyVault2.address}`
+  );
+*/
 
   const FarmlyPositionManager = await hre.ethers.getContractFactory("FarmlyPositionManager");
-  const farmlyPositionManager = await FarmlyPositionManager.deploy(farmlyConfig.address);
+  const farmlyPositionManager = await FarmlyPositionManager.deploy();
   await farmlyPositionManager.deployed();
   console.log(
     `FarmlyPositionManager deployed to ${farmlyPositionManager.address}`
   );
 
-  const FarmlyDexExecutor = await hre.ethers.getContractFactory("FarmlyDexExecutor");
-  const farmlyDexExecutor = await FarmlyDexExecutor.deploy(process.env.PANCAKE_ROUTER);
-  await farmlyDexExecutor.deployed();
-  console.log(
-    `FarmlyDexExecutor deployed to ${farmlyDexExecutor.address}`
-  );
 
-  console.log((await farmlyConfig.setExecutor(farmlyDexExecutor.address, "true")).hash, "setExecutor");
+
+  const FarmlyUniV3Executor = await hre.ethers.getContractFactory("FarmlyUniV3Executor");
+  const farmlyUniV3Executor = await FarmlyUniV3Executor.deploy();
+  await farmlyUniV3Executor.deployed();
+  console.log(
+    `FarmlyUniV3Executor deployed to ${farmlyUniV3Executor.address}`
+  );
 
 }
 

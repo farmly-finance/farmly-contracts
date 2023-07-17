@@ -8,16 +8,10 @@ const hre = require("hardhat");
 require('dotenv').config();
 
 async function main() {
-
-    const FarmlyConfig = await ethers.getContractFactory("FarmlyConfig");
-    const farmlyConfig = await FarmlyConfig.attach(
-        process.env.FARMLY_CONFIG_CONTRACT_ADDRESS
-    );
-
-
-
-    console.log((await farmlyConfig.setExecutor(process.env.FARMLY_DEX_EXECUTOR_CONTRACT_ADDRESS, "true")).hash, "setExecutor")
-
+    const [owner, signer2] = await ethers.getSigners();
+    const factory = await ethers.getContractAt("IUniswapV3Factory", process.env.UNISWAP_V3_FACTORY_CONTRACT_ADDRESS);
+    // first call
+    console.log(await factory.connect(owner).createPool(process.env.VAULT_TOKEN, process.env.VAULT_TOKEN_2, "500", { gasLimit: 5000000 }), "created pool")
 
 }
 

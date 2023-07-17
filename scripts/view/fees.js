@@ -8,32 +8,22 @@ const hre = require("hardhat");
 require('dotenv').config();
 
 async function main() {
-    // 000000000000000000
 
     const FarmlyPositionManager = await ethers.getContractFactory("FarmlyPositionManager");
     const farmlyPositionManager = await FarmlyPositionManager.attach(
         process.env.FARMLY_POSITION_MANAGER_CONTRACT_ADDRESS
     );
 
-    const tx = await farmlyPositionManager.closePosition("1");
-    console.log(tx.hash, "position closed")
+    const fees = await farmlyPositionManager.fees("67806")
+    console.log(fees)
+    console.log(fees.amount0.toString(), "fees");
 
 
 }
 
+// We recommend this pattern to be able to use async/await everywhere
+// and properly handle errors.
 main().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });
-
-/*
-
-function createPosition(
-        IERC20 token,
-        IERC20 debtToken,
-        uint256 tokenAmount,
-        uint256 debtTokenAmount,
-        uint256 debtAmount,
-        address executor
-
-*/
