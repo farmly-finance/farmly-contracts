@@ -4,6 +4,7 @@ import "./library/FarmlyFullMath.sol";
 import "./library/FarmlyStructs.sol";
 import "./interfaces/IFarmlyVault.sol";
 import "./interfaces/IFarmlyUniV3Executor.sol";
+import "./interfaces/IFarmlyPriceConsumer.sol";
 
 contract FarmlyPositionManager {
     struct VaultInfo {
@@ -23,6 +24,8 @@ contract FarmlyPositionManager {
         DebtInfo debt1;
     }
 
+    IFarmlyPriceConsumer public farmlyPriceConsumer =
+        IFarmlyPriceConsumer(0x101E0DaB98F20Ed2cadb98df804811Cb7B57Cf71);
     mapping(uint256 => Position) public positions;
     mapping(address => uint256[]) public userPositions;
     uint256 public nextPositionID = 1;
@@ -264,6 +267,97 @@ contract FarmlyPositionManager {
         position.debt1.vault.debtAmount = 0;
     }
 
+    function liquidatePosition(
+        IFarmlyUniV3Executor executor,
+        uint256 positionID
+    ) public {
+        Position storage position = positions[positionID];
+
+        uint256 debt0 = position.debt0.vault.vault.debtShareToDebt(
+            position.debt0.debtShare
+        );
+        uint256 debt1 = position.debt1.vault.vault.debtShareToDebt(
+            position.debt1.debtShare
+        );
+
+        (
+            uint256 amount0,
+            uint256 amount1,
+            ,
+            address token0,
+            address token1,
+
+        ) = executor.close(position.uniV3PositionID, debt0, debt1);
+
+        IERC20(token0).approve(address(position.debt0.vault.vault), amount0);
+        IERC20(token1).approve(address(position.debt1.vault.vault), amount1);
+
+        position.debt0.vault.vault.close(position.debt0.debtShare);
+        position.debt1.vault.vault.close(position.debt1.debtShare);
+
+        IERC20(token0).transfer(msg.sender, amount0 - debt0);
+        IERC20(token1).transfer(msg.sender, amount1 - debt1);
+
+        position.debt0.debtShare = 0;
+        position.debt1.debtShare = 0;
+        position.debt0.vault.debtAmount = 0;
+        position.debt1.vault.debtAmount = 0;
+    }
+
+    function getPositionUSDValue(
+        IFarmlyUniV3Executor executor,
+        uint256 positionID
+    )
+        public
+        view
+        returns (uint256 token0USD, uint256 token1USD, uint256 totalUSD)
+    {
+        Position memory position = positions[positionID];
+        (address token0, address token1, , , , ) = executor.getPositionData(
+            position.uniV3PositionID
+        );
+        (uint256 amount0, uint256 amount1) = executor.getPositionAmounts(
+            position.uniV3PositionID
+        );
+
+        token0USD = _tokenUSDValue(token0, amount0);
+        token1USD = _tokenUSDValue(token1, amount1);
+        totalUSD = token0USD + token1USD;
+    }
+
+    function getDebtUSDValue(
+        IFarmlyUniV3Executor executor,
+        uint256 positionID
+    )
+        public
+        view
+        returns (uint256 debt0USD, uint256 debt1USD, uint256 debtUSD)
+    {
+        Position memory position = positions[positionID];
+        (address token0, address token1, , , , ) = executor.getPositionData(
+            position.uniV3PositionID
+        );
+        uint debt0 = position.debt0.vault.vault.debtShareToDebt(
+            position.debt0.debtShare
+        );
+        uint debt1 = position.debt1.vault.vault.debtShareToDebt(
+            position.debt1.debtShare
+        );
+        debt0USD = _tokenUSDValue(token0, debt0);
+        debt1USD = _tokenUSDValue(token1, debt1);
+        debtUSD = debt0USD + debt1USD;
+    }
+
+    function _tokenUSDValue(
+        address token,
+        uint256 amount
+    ) internal view returns (uint256) {
+        uint256 price = farmlyPriceConsumer.getPrice(token);
+        return FarmlyFullMath.mulDiv(price, amount, 1e18);
+    }
+}
+
+/*
     function multicall(
         bytes[] calldata data
     ) public returns (bytes[] memory results) {
@@ -285,4 +379,4 @@ contract FarmlyPositionManager {
             results[i] = result;
         }
     }
-}
+*/

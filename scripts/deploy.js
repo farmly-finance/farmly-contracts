@@ -9,6 +9,14 @@ require('dotenv').config();
 
 async function main() {
   /* 
+    const FarmlyPriceConsumer = await hre.ethers.getContractFactory("FarmlyPriceConsumer");
+    const farmlyPriceConsumer = await FarmlyPriceConsumer.deploy();
+    await farmlyPriceConsumer.deployed();
+    console.log(
+      `farmlyPriceConsumer deployed to ${farmlyPriceConsumer.address}`
+    );
+  */
+  /* 
     const TestUSDC = await hre.ethers.getContractFactory("TestUSDC");
     const testUSDC = await TestUSDC.deploy();
     await testUSDC.deployed();
@@ -46,7 +54,8 @@ async function main() {
   console.log(
     `FarmlyVault2 deployed to ${farmlyVault2.address}`
   );
-*/
+
+    */
 
   const FarmlyPositionManager = await hre.ethers.getContractFactory("FarmlyPositionManager");
   const farmlyPositionManager = await FarmlyPositionManager.deploy();
@@ -56,7 +65,6 @@ async function main() {
   );
 
 
-
   const FarmlyUniV3Executor = await hre.ethers.getContractFactory("FarmlyUniV3Executor");
   const farmlyUniV3Executor = await FarmlyUniV3Executor.deploy();
   await farmlyUniV3Executor.deployed();
@@ -64,7 +72,9 @@ async function main() {
     `FarmlyUniV3Executor deployed to ${farmlyUniV3Executor.address}`
   );
 
+
 }
+
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.

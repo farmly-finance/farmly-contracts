@@ -311,40 +311,6 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
         */
     }
 
-    /*
-
-    function collectAndAdd(uint256 uniV3PositionID) public {
-        (
-            ,
-            ,
-            address token0,
-            address token1,
-            uint24 poolFee,
-            int24 tickLower,
-            int24 tickUpper,
-            ,
-            ,
-            ,
-            ,
-
-        ) = nonfungiblePositionManager.positions(uniV3PositionID);
-
-        (uint256 amount0, uint256 amount1) = _collect(uniV3PositionID);
-
-        _swapAndIncrease(
-            uniV3PositionID,
-            token0,
-            token1,
-            poolFee,
-            amount0,
-            amount1,
-            tickLower,
-            tickUpper
-        );
-    }
-
-    */
-
     function _collect(
         uint256 uniV3PositionID,
         address receiver
@@ -358,67 +324,6 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
             )
         );
     }
-
-    /*
-    function _swapAndIncrease(
-        uint256 uniV3PositionID,
-        address token0,
-        address token1,
-        uint24 poolFee,
-        uint256 amount0,
-        uint256 amount1,
-        int24 tickLower,
-        int24 tickUpper
-    ) private {
-        (uint160 sp, , , , , , ) = IUniswapV3Pool(
-            factory.getPool(token0, token1, poolFee)
-        ).slot0();
-
-        (
-            uint256 x_final,
-            uint256 y_final,
-            bool is0To1,
-            uint256 amountIn
-        ) = getAmountsForAddingLiquidity(
-                amount0,
-                amount1,
-                TickMath.getSqrtRatioAtTick(tickLower),
-                TickMath.getSqrtRatioAtTick(tickUpper),
-                sp,
-                1
-            );
-
-        swapExactInput(
-            is0To1 ? token0 : token1,
-            is0To1 ? token1 : token0,
-            amountIn,
-            poolFee
-        );
-
-        TransferHelper.safeApprove(
-            address(token0),
-            address(nonfungiblePositionManager),
-            x_final
-        );
-        TransferHelper.safeApprove(
-            address(token1),
-            address(nonfungiblePositionManager),
-            y_final
-        );
-
-        nonfungiblePositionManager.increaseLiquidity(
-            INonfungiblePositionManager.IncreaseLiquidityParams(
-                uniV3PositionID,
-                x_final,
-                y_final,
-                0,
-                0,
-                block.timestamp
-            )
-        );
-    }
-
-    */
 
     function swapExactInput(
         address tokenIn,
@@ -512,38 +417,65 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
             token1.transfer(owner, token1.balanceOf(address(this)));
     }
 
-    /*
+    function getPositionAmounts(
+        uint256 uniV3PositionID
+    ) public view returns (uint256 amount0, uint256 amount1) {
+        (
+            ,
+            ,
+            address token0,
+            address token1,
+            uint24 fee,
+            int24 tickLower,
+            int24 tickUpper,
+            uint128 liquidity,
+            ,
+            ,
+            ,
 
-    function getY(
-        uint160 sa,
-        uint160 sb,
-        uint160 sp
-    ) public view returns (uint256) {
-        uint256 a = FullMath.mulDiv(10 ** 18, sp, (sb - sp));
-        uint256 b = FullMath.mulDiv(sb, (sp - sa), 2 ** 96);
-        return FullMath.mulDiv(a, b, 2 ** 96);
+        ) = nonfungiblePositionManager.positions(uniV3PositionID);
+
+        IUniswapV3Pool pool = IUniswapV3Pool(
+            factory.getPool(token0, token1, fee)
+        );
+
+        (uint160 sqrtPriceX96, , , , , , ) = pool.slot0();
+
+        (amount0, amount1) = LiquidityAmounts.getAmountsForLiquidity(
+            sqrtPriceX96,
+            TickMath.getSqrtRatioAtTick(tickLower),
+            TickMath.getSqrtRatioAtTick(tickUpper),
+            liquidity
+        );
     }
 
-    function getAmountsForAddingLiquidity(
-        uint256 x0,
-        uint256 y0,
-        uint160 sa,
-        uint160 sb,
-        uint160 sp,
-        uint256 p
+    function getPositionData(
+        uint256 uniV3PositionID
     )
         public
         view
-        returns (uint256 x_final, uint256 y_final, bool is0to1, uint amountIn)
+        returns (
+            address token0,
+            address token1,
+            uint24 fee,
+            int24 tickLower,
+            int24 tickUpper,
+            uint128 liquidity
+        )
     {
-        uint256 y_unit = getY(sa, sb, sp);
-        uint256 v_unit = (p / 10 ** 18) + (y_unit / 10 ** 18);
-        uint256 v_total = FullMath.mulDiv(x0, p, 10 ** 18) + y0;
-        x_final = v_total / v_unit;
-        y_final = FullMath.mulDiv(x_final, y_unit, 10 ** 18);
-        is0to1 = x0 - x_final > 0;
-        amountIn = is0to1 ? x0 - x_final : y0 - y_final;
-    }
+        (
+            ,
+            ,
+            token0,
+            token1,
+            fee,
+            tickLower,
+            tickUpper,
+            liquidity,
+            ,
+            ,
+            ,
 
-    */
+        ) = nonfungiblePositionManager.positions(uniV3PositionID);
+    }
 }
