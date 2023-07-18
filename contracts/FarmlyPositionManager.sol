@@ -110,6 +110,63 @@ contract FarmlyPositionManager {
         position.debt1.vault.debtAmount += vault1.debtAmount;
     }
 
+    /* 
+    %100 = 1000000
+    */
+
+    function decreasePosition(
+        IFarmlyUniV3Executor executor,
+        uint positionID,
+        uint24 liquidityPercent,
+        uint24 debtShare0Percent,
+        uint24 debtShare1Percent
+    ) public {
+        Position storage position = positions[positionID];
+
+        uint256 debt0 = position.debt0.vault.vault.debtShareToDebt(
+            (position.debt0.debtShare * debtShare0Percent) / 1000000
+        );
+        uint256 debt1 = position.debt1.vault.vault.debtShareToDebt(
+            (position.debt1.debtShare * debtShare1Percent) / 1000000
+        );
+
+        (
+            uint256 amount0,
+            uint256 amount1,
+            ,
+            address token0,
+            address token1,
+
+        ) = executor.decrease(
+                position.uniV3PositionID,
+                liquidityPercent,
+                debt0,
+                debt1
+            );
+
+        IERC20(token0).approve(address(position.debt0.vault.vault), amount0);
+        IERC20(token1).approve(address(position.debt1.vault.vault), amount1);
+
+        position.debt0.vault.vault.close(
+            (position.debt0.debtShare * debtShare0Percent) / 1000000
+        );
+        position.debt1.vault.vault.close(
+            (position.debt1.debtShare * debtShare1Percent) / 1000000
+        );
+
+        IERC20(token0).transfer(msg.sender, amount0 - debt0);
+        IERC20(token1).transfer(msg.sender, amount1 - debt1);
+
+        position.debt0.debtShare -=
+            (position.debt0.debtShare * debtShare0Percent) /
+            1000000;
+        position.debt1.debtShare -=
+            (position.debt1.debtShare * debtShare1Percent) /
+            1000000;
+        position.debt0.vault.debtAmount -= debt0;
+        position.debt1.vault.debtAmount -= debt1;
+    }
+
     function collectFees(
         IFarmlyUniV3Executor executor,
         uint256 positionID
@@ -126,6 +183,48 @@ contract FarmlyPositionManager {
         ) = executor.collect(position.uniV3PositionID);
         IERC20(token0).transfer(msg.sender, amount0);
         IERC20(token1).transfer(msg.sender, amount1);
+    }
+
+    function collectAndIncrease(
+        IFarmlyUniV3Executor executor,
+        uint256 positionID,
+        VaultInfo memory vault0,
+        VaultInfo memory vault1,
+        FarmlyStructs.PositionInfo memory positionInfo,
+        FarmlyStructs.SwapInfo memory swapInfo
+    ) public {
+        Position storage position = positions[positionID];
+        (
+            uint256 amount0,
+            uint256 amount1,
+            address token0,
+            address token1
+        ) = executor.collect(position.uniV3PositionID);
+
+        uint debtShare0 = vault0.vault.borrow(vault0.debtAmount);
+        uint debtShare1 = vault1.vault.borrow(vault1.debtAmount);
+        positionInfo.token0.approve(
+            address(executor),
+            amount0 + vault0.debtAmount
+        );
+        positionInfo.token1.approve(
+            address(executor),
+            amount1 + vault1.debtAmount
+        );
+
+        executor.increase(
+            position.uniV3PositionID,
+            msg.sender,
+            amount0 + vault0.debtAmount,
+            amount1 + vault1.debtAmount,
+            positionInfo,
+            swapInfo
+        );
+
+        position.debt0.debtShare += debtShare0;
+        position.debt1.debtShare += debtShare1;
+        position.debt0.vault.debtAmount += vault0.debtAmount;
+        position.debt1.vault.debtAmount += vault1.debtAmount;
     }
 
     function closePosition(

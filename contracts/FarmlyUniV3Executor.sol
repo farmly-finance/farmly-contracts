@@ -131,6 +131,88 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
             );
     }
 
+    function decrease(
+        uint256 uniV3PositionID,
+        uint24 liquidityPercent,
+        uint256 debt0,
+        uint256 debt1
+    )
+        public
+        returns (
+            uint256 amount0,
+            uint256 amount1,
+            uint128 liquidity,
+            address token0,
+            address token1,
+            uint24 poolFee
+        )
+    {
+        (
+            ,
+            ,
+            token0,
+            token1,
+            poolFee,
+            ,
+            ,
+            liquidity,
+            ,
+            ,
+            ,
+
+        ) = nonfungiblePositionManager.positions(uniV3PositionID);
+
+        (amount0, amount1) = nonfungiblePositionManager.decreaseLiquidity(
+            INonfungiblePositionManager.DecreaseLiquidityParams({
+                tokenId: uniV3PositionID,
+                liquidity: (liquidity * liquidityPercent) / 1000000,
+                amount0Min: 0,
+                amount1Min: 0,
+                deadline: block.timestamp
+            })
+        );
+
+        _collect(uniV3PositionID, address(this));
+
+        if (debt0 > amount0) {
+            uint256 amountIn = swapExactOutput(
+                token1,
+                token0,
+                debt0 - amount0,
+                poolFee
+            );
+
+            amount0 += debt0 - amount0;
+            amount1 -= amountIn;
+        } else if (debt1 > amount1) {
+            uint256 amountIn = swapExactOutput(
+                token0,
+                token1,
+                debt1 - amount1,
+                poolFee
+            );
+
+            amount1 += debt1 - amount1;
+            amount0 -= amountIn;
+        }
+
+        IERC20(token0).transfer(
+            msg.sender,
+            IERC20(token0).balanceOf(address(this))
+        );
+        IERC20(token1).transfer(
+            msg.sender,
+            IERC20(token1).balanceOf(address(this))
+        );
+
+        /*
+        address tokenIn,
+        address tokenOut,
+        uint amountIn,
+        uint24 poolFee
+        */
+    }
+
     function collect(
         uint256 uniV3PositionID
     )
@@ -182,8 +264,8 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
             INonfungiblePositionManager.DecreaseLiquidityParams({
                 tokenId: uniV3PositionID,
                 liquidity: liquidity,
-                amount0Min: 1000,
-                amount1Min: 1000,
+                amount0Min: 0,
+                amount1Min: 0,
                 deadline: block.timestamp
             })
         );

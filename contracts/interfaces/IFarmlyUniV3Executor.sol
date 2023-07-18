@@ -19,6 +19,22 @@ interface IFarmlyUniV3Executor {
         FarmlyStructs.SwapInfo memory swapInfo
     ) external returns (uint128 liquidity, uint256 amount0, uint256 amount1);
 
+    function decrease(
+        uint256 uniV3PositionID,
+        uint24 liquidityPercent,
+        uint256 debt0,
+        uint256 debt1
+    )
+        external
+        returns (
+            uint256 amount0,
+            uint256 amount1,
+            uint128 liquidity,
+            address token0,
+            address token1,
+            uint24 poolFee
+        );
+
     function collect(
         uint256 uniV3PositionID
     )
