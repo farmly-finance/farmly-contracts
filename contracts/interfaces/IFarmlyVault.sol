@@ -11,7 +11,7 @@ interface IFarmlyVault {
 
     function totalDebtShare() external view returns (uint);
 
-    function debtShareToDebt(uint256 debtShare) external returns (uint256);
+    function debtShareToDebt(uint256 debtShare) external view returns (uint256);
 
-    function debtToDebtShare(uint256 debt) external returns (uint256);
+    function debtToDebtShare(uint256 debt) external view returns (uint256);
 }

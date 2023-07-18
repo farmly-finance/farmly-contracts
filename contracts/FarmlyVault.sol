@@ -101,16 +101,22 @@ contract FarmlyVault is ERC20, FarmlyInterestModel {
         return debt;
     }
 
-    function debtShareToDebt(
-        uint256 debtShare
-    ) public update(0) returns (uint256) {
+    function debtShareToDebt(uint256 debtShare) public view returns (uint256) {
         if (totalDebtShare == 0) return debtShare;
-        return FarmlyFullMath.mulDiv(debtShare, totalDebt, totalDebtShare);
+        uint256 interest = pendingInterest(0);
+        return
+            FarmlyFullMath.mulDiv(
+                debtShare,
+                totalDebt + interest,
+                totalDebtShare
+            );
     }
 
-    function debtToDebtShare(uint256 debt) public update(0) returns (uint256) {
+    function debtToDebtShare(uint256 debt) public view returns (uint256) {
         if (totalDebtShare == 0) return debt;
-        return FarmlyFullMath.mulDiv(debt, totalDebtShare, totalDebt);
+        uint256 interest = pendingInterest(0);
+        return
+            FarmlyFullMath.mulDiv(debt, totalDebtShare, totalDebt + interest);
     }
 
     function addBorrower() public {}
