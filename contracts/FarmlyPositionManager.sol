@@ -5,6 +5,7 @@ import "./library/FarmlyStructs.sol";
 import "./interfaces/IFarmlyVault.sol";
 import "./interfaces/IFarmlyUniV3Executor.sol";
 import "./interfaces/IFarmlyPriceConsumer.sol";
+import "./interfaces/IFarmlyConfig.sol";
 
 contract FarmlyPositionManager {
     struct VaultInfo {
@@ -28,7 +29,14 @@ contract FarmlyPositionManager {
         IFarmlyPriceConsumer(0x101E0DaB98F20Ed2cadb98df804811Cb7B57Cf71);
     mapping(uint256 => Position) public positions;
     mapping(address => uint256[]) public userPositions;
-    uint256 public nextPositionID = 1;
+    uint256 public nextPositionID;
+
+    constructor() {
+        nextPositionID++;
+    }
+
+    IFarmlyConfig public farmlyConfig =
+        IFarmlyConfig(0x2b30e7B5a89c3D0225Fb1D07B4dc030BF1aa03a7);
 
     uint256 constant MAX_INT =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
@@ -184,8 +192,18 @@ contract FarmlyPositionManager {
             address token0,
             address token1
         ) = executor.collect(position.uniV3PositionID);
-        IERC20(token0).transfer(msg.sender, amount0);
-        IERC20(token1).transfer(msg.sender, amount1);
+
+        uint256 amount0Fee = (amount0 * farmlyConfig.uniPerformanceFee()) /
+            1000000;
+
+        uint256 amount1Fee = (amount1 * farmlyConfig.uniPerformanceFee()) /
+            1000000;
+
+        IERC20(token0).transfer(farmlyConfig.feeAddress(), amount0Fee);
+        IERC20(token1).transfer(farmlyConfig.feeAddress(), amount1Fee);
+
+        IERC20(token0).transfer(msg.sender, amount0 - amount0Fee);
+        IERC20(token1).transfer(msg.sender, amount1 - amount1Fee);
     }
 
     function collectAndIncrease(
@@ -354,6 +372,12 @@ contract FarmlyPositionManager {
     ) internal view returns (uint256) {
         uint256 price = farmlyPriceConsumer.getPrice(token);
         return FarmlyFullMath.mulDiv(price, amount, 1e18);
+    }
+
+    function getUserPositions(
+        address user
+    ) public view returns (uint256[] memory) {
+        return userPositions[user];
     }
 }
 
