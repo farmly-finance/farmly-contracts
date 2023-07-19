@@ -4,6 +4,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract FarmlyConfig is Ownable {
     mapping(address => mapping(address => address)) public poolVault;
     mapping(address => bool) public executors;
+    uint24 public uniPerformanceFee = 100000; // 100 = 1000000
+    uint24 public vaultPerformanceFee = 200000;
+    uint24 public liquidationPerformanceFee = 100000;
+    address public feeAddress = 0xd59B898811F88C59E4673789a19Df51347d5Fa4f;
 
     function setFarmingPoolVault(
         address tokenA,
