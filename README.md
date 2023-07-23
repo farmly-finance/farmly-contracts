@@ -2,9 +2,9 @@
 
 ## Contracts
 
-- [ ] FarmlyVault
-- [ ] FarmlyPositionManager
-- [ ] FarmlyDexExecutor
+- [x] FarmlyVault
+- [x] FarmlyPositionManager
+- [x] FarmlyDexExecutor
 - [x] FarmlyInterestModel
 - [x] FarmlyConfig
 
