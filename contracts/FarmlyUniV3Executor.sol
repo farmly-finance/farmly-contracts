@@ -179,7 +179,6 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
                 token1,
                 token0,
                 debt0 - amount0,
-                debt1 - amount1,
                 poolFee
             );
 
@@ -190,7 +189,6 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
                 token0,
                 token1,
                 debt1 - amount1,
-                debt0 - amount0,
                 poolFee
             );
 
@@ -279,7 +277,6 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
                 token1,
                 token0,
                 debt0 - amount0,
-                debt1 - amount1,
                 poolFee
             );
 
@@ -290,7 +287,6 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
                 token0,
                 token1,
                 debt1 - amount1,
-                debt0 - amount0,
                 poolFee
             );
 
@@ -357,10 +353,9 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
         address tokenIn,
         address tokenOut,
         uint amountOut,
-        uint amountInMaximum,
         uint24 poolFee
     ) private returns (uint amountIn) {
-        TransferHelper.safeApprove(tokenIn, address(swapRouter), amountOut);
+        TransferHelper.safeApprove(tokenIn, address(swapRouter), 2 ** 256 - 1);
 
         ISwapRouter.ExactOutputSingleParams memory params = ISwapRouter
             .ExactOutputSingleParams({
@@ -370,12 +365,13 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountOut: amountOut,
-                amountInMaximum: amountInMaximum,
+                amountInMaximum: 2 ** 256 - 1,
                 sqrtPriceLimitX96: 0
             });
 
         // The call to `exactInputSingle` executes the swap.
         amountIn = swapRouter.exactOutputSingle(params);
+        TransferHelper.safeApprove(tokenIn, address(swapRouter), 0);
     }
 
     function add(
