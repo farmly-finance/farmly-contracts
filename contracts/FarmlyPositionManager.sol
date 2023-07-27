@@ -8,6 +8,11 @@ import "./interfaces/IFarmlyPriceConsumer.sol";
 import "./interfaces/IFarmlyConfig.sol";
 
 contract FarmlyPositionManager {
+    struct SlippageProtection {
+        uint256 minPositionUSDValue;
+        uint256 maxLeverageTolerance; // 1000000 = 1x
+    }
+
     struct VaultInfo {
         IFarmlyVault vault;
         uint debtAmount;
@@ -48,7 +53,8 @@ contract FarmlyPositionManager {
         VaultInfo memory vault0,
         VaultInfo memory vault1,
         FarmlyStructs.PositionInfo memory positionInfo,
-        FarmlyStructs.SwapInfo memory swapInfo
+        FarmlyStructs.SwapInfo memory swapInfo,
+        SlippageProtection memory slippage
     ) public {
         positionInfo.token0.transferFrom(msg.sender, address(this), amount0);
         positionInfo.token1.transferFrom(msg.sender, address(this), amount1);
@@ -62,6 +68,7 @@ contract FarmlyPositionManager {
             address(executor),
             amount1 + vault1.debtAmount
         );
+
         uint256 tokenId = executor.execute(
             msg.sender,
             amount0 + vault0.debtAmount,
@@ -69,6 +76,27 @@ contract FarmlyPositionManager {
             positionInfo,
             swapInfo
         );
+
+        (
+            uint256 positionTotalUSDValue,
+            ,
+
+        ) = _getPositionUSDValueWithUniV3PositionID(executor, tokenId);
+
+        if (positionTotalUSDValue < slippage.minPositionUSDValue) revert();
+
+        uint debtUSD = _tokenUSDValue(
+            address(positionInfo.token0),
+            vault0.debtAmount
+        ) + _tokenUSDValue(address(positionInfo.token1), vault1.debtAmount);
+
+        if (
+            FarmlyFullMath.mulDiv(
+                positionTotalUSDValue,
+                1000000,
+                positionTotalUSDValue - debtUSD
+            ) > slippage.maxLeverageTolerance
+        ) revert();
 
         positions[nextPositionID] = Position(
             tokenId,
@@ -331,16 +359,14 @@ contract FarmlyPositionManager {
         returns (uint256 token0USD, uint256 token1USD, uint256 totalUSD)
     {
         Position memory position = positions[positionID];
-        (address token0, address token1, , , , ) = executor.getPositionData(
+        (
+            token0USD,
+            token1USD,
+            totalUSD
+        ) = _getPositionUSDValueWithUniV3PositionID(
+            executor,
             position.uniV3PositionID
         );
-        (uint256 amount0, uint256 amount1) = executor.getPositionAmounts(
-            position.uniV3PositionID
-        );
-
-        token0USD = _tokenUSDValue(token0, amount0);
-        token1USD = _tokenUSDValue(token1, amount1);
-        totalUSD = token0USD + token1USD;
     }
 
     function getDebtUSDValue(
@@ -364,6 +390,26 @@ contract FarmlyPositionManager {
         debt0USD = _tokenUSDValue(token0, debt0);
         debt1USD = _tokenUSDValue(token1, debt1);
         debtUSD = debt0USD + debt1USD;
+    }
+
+    function _getPositionUSDValueWithUniV3PositionID(
+        IFarmlyUniV3Executor executor,
+        uint256 uniV3PositionID
+    )
+        internal
+        view
+        returns (uint256 token0USD, uint256 token1USD, uint256 totalUSD)
+    {
+        (address token0, address token1, , , , ) = executor.getPositionData(
+            uniV3PositionID
+        );
+        (uint256 amount0, uint256 amount1) = executor.getPositionAmounts(
+            uniV3PositionID
+        );
+
+        token0USD = _tokenUSDValue(token0, amount0);
+        token1USD = _tokenUSDValue(token1, amount1);
+        totalUSD = token0USD + token1USD;
     }
 
     function _tokenUSDValue(
