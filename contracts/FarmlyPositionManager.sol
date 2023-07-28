@@ -78,9 +78,9 @@ contract FarmlyPositionManager {
         );
 
         (
-            uint256 positionTotalUSDValue,
             ,
-
+            ,
+            uint256 positionTotalUSDValue
         ) = _getPositionUSDValueWithUniV3PositionID(executor, tokenId);
 
         require(
