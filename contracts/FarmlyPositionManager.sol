@@ -83,20 +83,24 @@ contract FarmlyPositionManager {
 
         ) = _getPositionUSDValueWithUniV3PositionID(executor, tokenId);
 
-        if (positionTotalUSDValue < slippage.minPositionUSDValue) revert();
+        require(
+            positionTotalUSDValue > slippage.minPositionUSDValue,
+            "SLIPPAGE: MIN_USD"
+        );
 
         uint debtUSD = _tokenUSDValue(
             address(positionInfo.token0),
             vault0.debtAmount
         ) + _tokenUSDValue(address(positionInfo.token1), vault1.debtAmount);
 
-        if (
+        require(
             FarmlyFullMath.mulDiv(
                 positionTotalUSDValue,
                 1000000,
                 positionTotalUSDValue - debtUSD
-            ) > slippage.maxLeverageTolerance
-        ) revert();
+            ) < slippage.maxLeverageTolerance,
+            "SLIPPAGE: MAX_LEVERAGE"
+        );
 
         positions[nextPositionID] = Position(
             tokenId,
