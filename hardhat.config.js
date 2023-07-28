@@ -36,7 +36,7 @@ module.exports = {
       accounts: [process.env.DEPLOYER_KEY]
     },
     goerli: {
-      url: "https://rpc.ankr.com/eth_goerli",
+      url: "https://goerli.infura.io/v3/8516a359516c40aba7c35bcf1444218a",
       chainId: 5,
       accounts: [process.env.DEPLOYER_KEY],
       gas: 3000000
