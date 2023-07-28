@@ -76,40 +76,50 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
         address owner,
         uint256 amount0Has,
         uint256 amount1Has,
-        FarmlyStructs.PositionInfo memory positionInfo,
         FarmlyStructs.SwapInfo memory swapInfo
     ) public returns (uint128 liquidity, uint256 amount0, uint256 amount1) {
-        positionInfo.token0.transferFrom(msg.sender, address(this), amount0Has);
-        positionInfo.token1.transferFrom(msg.sender, address(this), amount1Has);
+        (address token0, address token1, uint24 fee, , , ) = getPositionData(
+            uniV3PositionID
+        );
+
+        TransferHelper.safeTransferFrom(
+            token0,
+            msg.sender,
+            address(this),
+            amount0Has
+        );
+
+        TransferHelper.safeTransferFrom(
+            token1,
+            msg.sender,
+            address(this),
+            amount1Has
+        );
 
         swapExactInput(
             swapInfo.tokenIn,
             swapInfo.tokenOut,
             swapInfo.amountIn,
-            positionInfo.poolFee
+            fee
         );
 
         TransferHelper.safeApprove(
-            address(positionInfo.token0),
+            token0,
             address(nonfungiblePositionManager),
-            positionInfo.token0.balanceOf(address(this))
+            IERC20(token0).balanceOf(address(this))
         );
         TransferHelper.safeApprove(
-            address(positionInfo.token1),
+            token1,
             address(nonfungiblePositionManager),
-            positionInfo.token1.balanceOf(address(this))
+            IERC20(token1).balanceOf(address(this))
         );
 
         INonfungiblePositionManager.IncreaseLiquidityParams
             memory params = INonfungiblePositionManager
                 .IncreaseLiquidityParams({
                     tokenId: uniV3PositionID,
-                    amount0Desired: positionInfo.token0.balanceOf(
-                        address(this)
-                    ),
-                    amount1Desired: positionInfo.token1.balanceOf(
-                        address(this)
-                    ),
+                    amount0Desired: IERC20(token0).balanceOf(address(this)),
+                    amount1Desired: IERC20(token1).balanceOf(address(this)),
                     amount0Min: 0,
                     amount1Min: 0,
                     deadline: block.timestamp
@@ -118,16 +128,18 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
         (liquidity, amount0, amount1) = nonfungiblePositionManager
             .increaseLiquidity(params);
 
-        if (positionInfo.token0.balanceOf(address(this)) > 0)
-            positionInfo.token0.transfer(
+        if (IERC20(token0).balanceOf(address(this)) > 0)
+            TransferHelper.safeTransfer(
+                token0,
                 owner,
-                positionInfo.token0.balanceOf(address(this))
+                IERC20(token0).balanceOf(address(this))
             );
 
-        if (positionInfo.token1.balanceOf(address(this)) > 0)
-            positionInfo.token1.transfer(
+        if (IERC20(token1).balanceOf(address(this)) > 0)
+            TransferHelper.safeTransfer(
+                token1,
                 owner,
-                positionInfo.token1.balanceOf(address(this))
+                IERC20(token1).balanceOf(address(this))
             );
     }
 

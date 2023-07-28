@@ -15,7 +15,6 @@ interface IFarmlyUniV3Executor {
         address owner,
         uint256 amount0Has,
         uint256 amount1Has,
-        FarmlyStructs.PositionInfo memory positionInfo,
         FarmlyStructs.SwapInfo memory swapInfo
     ) external returns (uint128 liquidity, uint256 amount0, uint256 amount1);
 
