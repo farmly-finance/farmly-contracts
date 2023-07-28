@@ -260,16 +260,15 @@ contract FarmlyPositionManager {
             address token1
         ) = executor.collect(position.uniV3PositionID);
 
-        uint leverage = getCurrentLeverage(executor, positionID);
         uint debt0 = FarmlyFullMath.mulDiv(
             amount0,
-            leverage - 1000000,
+            getCurrentLeverage(executor, positionID) - 1000000,
             1000000
         );
 
         uint debt1 = FarmlyFullMath.mulDiv(
             amount1,
-            leverage - 1000000,
+            getCurrentLeverage(executor, positionID) - 1000000,
             1000000
         );
 
