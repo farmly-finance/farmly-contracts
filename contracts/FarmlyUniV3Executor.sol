@@ -256,14 +256,14 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
         amount1 -= amount1Fee;
 
         TransferHelper.safeTransfer(token0, owner, amount0);
-        TransferHelper.safeTransfer(token0, owner, amount1);
+        TransferHelper.safeTransfer(token1, owner, amount1);
         TransferHelper.safeTransfer(
             token0,
             farmlyConfig.feeAddress(),
             amount0Fee
         );
         TransferHelper.safeTransfer(
-            token0,
+            token1,
             farmlyConfig.feeAddress(),
             amount1Fee
         );
