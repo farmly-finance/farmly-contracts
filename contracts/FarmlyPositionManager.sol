@@ -254,6 +254,8 @@ contract FarmlyPositionManager {
     function collectAndIncrease(
         IFarmlyUniV3Executor executor,
         uint256 positionID,
+        uint256 debt0,
+        uint256 debt1,
         FarmlyStructs.SwapInfo memory swapInfo
     ) public {
         Position storage position = positions[positionID];
@@ -263,18 +265,6 @@ contract FarmlyPositionManager {
             address token0,
             address token1
         ) = executor.collect(position.uniV3PositionID);
-
-        uint debt0 = FarmlyFullMath.mulDiv(
-            amount0,
-            getCurrentLeverage(executor, positionID) - 1000000,
-            1000000
-        );
-
-        uint debt1 = FarmlyFullMath.mulDiv(
-            amount1,
-            getCurrentLeverage(executor, positionID) - 1000000,
-            1000000
-        );
 
         uint debtShare0 = position.debt0.vault.vault.borrow(debt0);
         uint debtShare1 = position.debt1.vault.vault.borrow(debt1);
@@ -423,6 +413,19 @@ contract FarmlyPositionManager {
             1000000, // 100
             totalUSD - debtUSD
         );
+    }
+
+    function getDebtRatios(
+        IFarmlyUniV3Executor executor,
+        uint256 positionID
+    ) public view returns (uint256 debtRatio0, uint256 debtRatio1) {
+        (uint256 debt0, uint256 debt1, uint256 debtUSD) = getDebtUSDValue(
+            executor,
+            positionID
+        );
+
+        debtRatio0 = FarmlyFullMath.mulDiv(debt0, 1000000, debtUSD);
+        debtRatio1 = FarmlyFullMath.mulDiv(debt1, 1000000, debtUSD);
     }
 
     function _getPositionUSDValueWithUniV3PositionID(
