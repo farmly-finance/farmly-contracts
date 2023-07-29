@@ -8,7 +8,8 @@ const hre = require("hardhat");
 require('dotenv').config();
 
 async function main() {
-  /* 
+
+  /*
 
   const FarmlyConfig = await hre.ethers.getContractFactory("FarmlyConfig");
   const farmlyConfig = await FarmlyConfig.deploy();
@@ -16,15 +17,14 @@ async function main() {
   console.log(
     `FarmlyConfig deployed to ${farmlyConfig.address}`
   );
-
-
-    const FarmlyPriceConsumer = await hre.ethers.getContractFactory("FarmlyPriceConsumer");
-    const farmlyPriceConsumer = await FarmlyPriceConsumer.deploy();
-    await farmlyPriceConsumer.deployed();
-    console.log(
-      `farmlyPriceConsumer deployed to ${farmlyPriceConsumer.address}`
-    );
-  */
+  
+      const FarmlyPriceConsumer = await hre.ethers.getContractFactory("FarmlyPriceConsumer");
+      const farmlyPriceConsumer = await FarmlyPriceConsumer.deploy();
+      await farmlyPriceConsumer.deployed();
+      console.log(
+        `farmlyPriceConsumer deployed to ${farmlyPriceConsumer.address}`
+      );
+    */
   /* 
     const TestUSDC = await hre.ethers.getContractFactory("TestUSDC");
     const testUSDC = await TestUSDC.deploy();
@@ -58,7 +58,6 @@ async function main() {
     `FarmlyVault2 deployed to ${farmlyVault2.address}`
   );
     */
-
 
   const FarmlyPositionManager = await hre.ethers.getContractFactory("FarmlyPositionManager");
   const farmlyPositionManager = await FarmlyPositionManager.deploy();
