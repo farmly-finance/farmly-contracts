@@ -35,7 +35,8 @@ interface IFarmlyUniV3Executor {
         );
 
     function collect(
-        uint256 uniV3PositionID
+        uint256 uniV3PositionID,
+        address owner
     )
         external
         returns (

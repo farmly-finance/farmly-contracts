@@ -4,6 +4,7 @@ pragma abicoder v2;
 import "./library/LiquidityAmountsLib.sol";
 import "./library/FarmlyFullMath.sol";
 import "./library/FarmlyStructs.sol";
+import "./interfaces/IFarmlyConfig.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
@@ -23,6 +24,9 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
 
     IUniswapV3Factory public constant factory =
         IUniswapV3Factory(0x1F98431c8aD98523631AE4a59f267346ea31F984);
+
+    IFarmlyConfig public farmlyConfig =
+        IFarmlyConfig(0x2b30e7B5a89c3D0225Fb1D07B4dc030BF1aa03a7);
 
     function onERC721Received(
         address operator,
@@ -226,7 +230,8 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
     }
 
     function collect(
-        uint256 uniV3PositionID
+        uint256 uniV3PositionID,
+        address owner
     )
         public
         returns (
@@ -240,6 +245,28 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
 
         (, , token0, token1, , , , , , , , ) = nonfungiblePositionManager
             .positions(uniV3PositionID);
+
+        uint256 amount0Fee = (amount0 * farmlyConfig.uniPerformanceFee()) /
+            1000000;
+
+        uint256 amount1Fee = (amount1 * farmlyConfig.uniPerformanceFee()) /
+            1000000;
+
+        amount0 -= amount0Fee;
+        amount1 -= amount1Fee;
+
+        TransferHelper.safeTransfer(token0, owner, amount0);
+        TransferHelper.safeTransfer(token0, owner, amount1);
+        TransferHelper.safeTransfer(
+            token0,
+            farmlyConfig.feeAddress(),
+            amount0Fee
+        );
+        TransferHelper.safeTransfer(
+            token0,
+            farmlyConfig.feeAddress(),
+            amount1Fee
+        );
     }
 
     function close(

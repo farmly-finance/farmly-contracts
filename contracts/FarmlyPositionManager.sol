@@ -135,6 +135,8 @@ contract FarmlyPositionManager {
     ) public {
         Position storage position = positions[positionID];
 
+        executor.collect(position.uniV3PositionID, msg.sender);
+
         (address token0, address token1, , , , ) = executor.getPositionData(
             position.uniV3PositionID
         );
@@ -172,6 +174,8 @@ contract FarmlyPositionManager {
         uint24 decreasingPercent
     ) public {
         Position storage position = positions[positionID];
+
+        executor.collect(position.uniV3PositionID, msg.sender);
 
         uint256 debt0 = position.debt0.vault.vault.debtShareToDebt(
             (position.debt0.debtShare * decreasingPercent) / 1000000
@@ -222,24 +226,7 @@ contract FarmlyPositionManager {
         uint256 positionID
     ) public {
         Position storage position = positions[positionID];
-        (
-            uint256 amount0,
-            uint256 amount1,
-            address token0,
-            address token1
-        ) = executor.collect(position.uniV3PositionID);
-
-        uint256 amount0Fee = (amount0 * farmlyConfig.uniPerformanceFee()) /
-            1000000;
-
-        uint256 amount1Fee = (amount1 * farmlyConfig.uniPerformanceFee()) /
-            1000000;
-
-        IERC20(token0).transfer(farmlyConfig.feeAddress(), amount0Fee);
-        IERC20(token1).transfer(farmlyConfig.feeAddress(), amount1Fee);
-
-        IERC20(token0).transfer(msg.sender, amount0 - amount0Fee);
-        IERC20(token1).transfer(msg.sender, amount1 - amount1Fee);
+        executor.collect(position.uniV3PositionID, msg.sender);
     }
 
     function collectAndIncrease(
@@ -255,7 +242,7 @@ contract FarmlyPositionManager {
             uint256 amount1,
             address token0,
             address token1
-        ) = executor.collect(position.uniV3PositionID);
+        ) = executor.collect(position.uniV3PositionID, address(this));
 
         uint debtShare0 = position.debt0.vault.vault.borrow(debt0);
         uint debtShare1 = position.debt1.vault.vault.borrow(debt1);
@@ -281,6 +268,8 @@ contract FarmlyPositionManager {
         uint256 positionID
     ) public {
         Position storage position = positions[positionID];
+
+        executor.collect(position.uniV3PositionID, msg.sender);
 
         uint256 debt0 = position.debt0.vault.vault.debtShareToDebt(
             position.debt0.debtShare
@@ -318,6 +307,8 @@ contract FarmlyPositionManager {
         uint256 positionID
     ) public {
         Position storage position = positions[positionID];
+
+        executor.collect(position.uniV3PositionID, msg.sender);
 
         uint256 debt0 = position.debt0.vault.vault.debtShareToDebt(
             position.debt0.debtShare
