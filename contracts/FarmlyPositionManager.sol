@@ -127,35 +127,26 @@ contract FarmlyPositionManager {
     function increasePosition(
         uint256 positionID,
         IFarmlyUniV3Executor executor,
-        uint increasingRate,
         uint amount0,
         uint amount1,
-        IERC20 token0,
-        IERC20 token1,
+        uint debtAmount0,
+        uint debtAmount1,
         FarmlyStructs.SwapInfo memory swapInfo
     ) public {
         Position storage position = positions[positionID];
-        token0.transferFrom(msg.sender, address(this), amount0);
-        token1.transferFrom(msg.sender, address(this), amount1);
-        uint debtAmount0 = FarmlyFullMath.mulDiv(
-            position.debt0.vault.vault.debtShareToDebt(
-                position.debt0.debtShare
-            ),
-            increasingRate,
-            1000000
+
+        (address token0, address token1, , , , ) = executor.getPositionData(
+            position.uniV3PositionID
         );
-        uint debtAmount1 = FarmlyFullMath.mulDiv(
-            position.debt1.vault.vault.debtShareToDebt(
-                position.debt1.debtShare
-            ),
-            increasingRate,
-            1000000
-        );
+
+        IERC20(token0).transferFrom(msg.sender, address(this), amount0);
+        IERC20(token1).transferFrom(msg.sender, address(this), amount1);
+
         uint debtShare0 = position.debt0.vault.vault.borrow(debtAmount0);
         uint debtShare1 = position.debt1.vault.vault.borrow(debtAmount1);
 
-        token0.approve(address(executor), amount0 + debtAmount0);
-        token1.approve(address(executor), amount1 + debtAmount1);
+        IERC20(token0).approve(address(executor), amount0 + debtAmount0);
+        IERC20(token1).approve(address(executor), amount1 + debtAmount1);
 
         executor.increase(
             position.uniV3PositionID,
