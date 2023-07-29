@@ -241,7 +241,7 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
             address token1
         )
     {
-        (amount0, amount1) = _collect(uniV3PositionID, msg.sender);
+        (amount0, amount1) = _collect(uniV3PositionID, address(this));
 
         (, , token0, token1, , , , , , , , ) = nonfungiblePositionManager
             .positions(uniV3PositionID);
