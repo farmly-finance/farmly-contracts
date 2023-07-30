@@ -131,7 +131,8 @@ contract FarmlyPositionManager {
         uint amount1,
         uint debtAmount0,
         uint debtAmount1,
-        FarmlyStructs.SwapInfo memory swapInfo
+        FarmlyStructs.SwapInfo memory swapInfo,
+        SlippageProtection memory slippage
     ) public {
         Position storage position = positions[positionID];
 
@@ -156,6 +157,38 @@ contract FarmlyPositionManager {
             amount0 + debtAmount0,
             amount1 + debtAmount1,
             swapInfo
+        );
+
+        (
+            ,
+            ,
+            uint256 positionTotalUSDValue
+        ) = _getPositionUSDValueWithUniV3PositionID(
+                executor,
+                position.uniV3PositionID
+            );
+
+        require(
+            positionTotalUSDValue > slippage.minPositionUSDValue,
+            "SLIPPAGE: MIN_USD"
+        );
+
+        uint debtUSD = _tokenUSDValue(
+            token0,
+            position.debt0.vault.debtAmount + debtAmount0
+        ) +
+            _tokenUSDValue(
+                token1,
+                position.debt1.vault.debtAmount + debtAmount1
+            );
+
+        require(
+            FarmlyFullMath.mulDiv(
+                positionTotalUSDValue,
+                1000000,
+                positionTotalUSDValue - debtUSD
+            ) < slippage.maxLeverageTolerance,
+            "SLIPPAGE: MAX_LEVERAGE"
         );
 
         position.debt0.debtShare += debtShare0;
@@ -234,7 +267,8 @@ contract FarmlyPositionManager {
         uint256 positionID,
         uint256 debt0,
         uint256 debt1,
-        FarmlyStructs.SwapInfo memory swapInfo
+        FarmlyStructs.SwapInfo memory swapInfo,
+        SlippageProtection memory slippage
     ) public {
         Position storage position = positions[positionID];
         (
@@ -255,6 +289,34 @@ contract FarmlyPositionManager {
             amount0 + debt0,
             amount1 + debt1,
             swapInfo
+        );
+
+        (
+            ,
+            ,
+            uint256 positionTotalUSDValue
+        ) = _getPositionUSDValueWithUniV3PositionID(
+                executor,
+                position.uniV3PositionID
+            );
+
+        require(
+            positionTotalUSDValue > slippage.minPositionUSDValue,
+            "SLIPPAGE: MIN_USD"
+        );
+
+        uint debtUSD = _tokenUSDValue(
+            token0,
+            position.debt0.vault.debtAmount + debt0
+        ) + _tokenUSDValue(token1, position.debt1.vault.debtAmount + debt1);
+
+        require(
+            FarmlyFullMath.mulDiv(
+                positionTotalUSDValue,
+                1000000,
+                positionTotalUSDValue - debtUSD
+            ) < slippage.maxLeverageTolerance,
+            "SLIPPAGE: MAX_LEVERAGE"
         );
 
         position.debt0.debtShare += debtShare0;
