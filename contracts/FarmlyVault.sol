@@ -1,18 +1,20 @@
 pragma solidity >=0.5.0;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "./library/FarmlyFullMath.sol";
 import "./FarmlyInterestModel.sol";
 
-contract FarmlyVault is ERC20, FarmlyInterestModel {
+contract FarmlyVault is ERC20, FarmlyInterestModel, Ownable {
     using Math for uint;
 
     IERC20 public token;
     uint256 public totalDebt;
     uint256 public totalDebtShare;
     uint256 public lastAction;
+    mapping(address => bool) public borrower;
 
     constructor(IERC20 _token) ERC20("Farmly ETH Interest Bearing", "flyETH") {
         token = _token;
@@ -30,6 +32,11 @@ contract FarmlyVault is ERC20, FarmlyInterestModel {
             totalDebt += interest;
             lastAction = block.timestamp;
         }
+        _;
+    }
+
+    modifier onlyBorrower() {
+        require(borrower[msg.sender], "NOT BORROWER");
         _;
     }
 
@@ -71,7 +78,9 @@ contract FarmlyVault is ERC20, FarmlyInterestModel {
         }
     }
 
-    function borrow(uint256 amount) public update(amount) returns (uint) {
+    function borrow(
+        uint256 amount
+    ) public onlyBorrower update(amount) returns (uint) {
         token.transfer(msg.sender, amount);
         return _addDebt(amount);
     }
@@ -80,6 +89,7 @@ contract FarmlyVault is ERC20, FarmlyInterestModel {
         uint256 debtShare
     )
         public
+        onlyBorrower
         update(0)
         transferToken(debtShareToDebt(debtShare))
         returns (uint256)
@@ -119,7 +129,11 @@ contract FarmlyVault is ERC20, FarmlyInterestModel {
             FarmlyFullMath.mulDiv(debt, totalDebtShare, totalDebt + interest);
     }
 
-    function addBorrower() public {}
+    function addBorrower(address _borrower) public onlyOwner {
+        borrower[_borrower] = true;
+    }
 
-    function removeBorrower() public {}
+    function removeBorrower(address _borrower) public onlyOwner {
+        borrower[_borrower] = false;
+    }
 }

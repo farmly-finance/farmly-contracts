@@ -32,8 +32,8 @@
 - [x] Adding close function
 - [x] Adding debtShareToDebt funtion
 - [x] Adding debtToDebtShare funtion
-- [ ] Adding addBorrower function
-- [ ] Adding removeBorrower function
+- [x] Adding addBorrower function
+- [x] Adding removeBorrower function
 - [ ] Writing tests
 - [ ] Writing error messages
 - [ ] Adding function events
