@@ -368,6 +368,8 @@ contract FarmlyPositionManager {
         IFarmlyUniV3Executor executor,
         uint256 positionID
     ) public {
+        require(getFlyScore(executor, positionID) >= 10000, "Can't liquidate");
+
         Position storage position = positions[positionID];
 
         executor.collect(position.uniV3PositionID, msg.sender);
