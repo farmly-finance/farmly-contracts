@@ -7,6 +7,7 @@ contract FarmlyConfig is Ownable {
     uint24 public uniPerformanceFee = 100000; // 100 = 1000000
     uint24 public vaultPerformanceFee = 200000;
     uint24 public liquidationPerformanceFee = 100000;
+    uint24 public liquidationThreshold = 875000;
     address public feeAddress = 0x626c414DBE7c333eCd5b5C5F3B8E725c99C6f848;
 
     function setFarmingPoolVault(

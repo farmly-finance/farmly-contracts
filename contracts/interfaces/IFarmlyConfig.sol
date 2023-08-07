@@ -14,5 +14,7 @@ interface IFarmlyConfig {
 
     function liquidationPerformanceFee() external view returns (uint24);
 
+    function liquidationThreshold() external view returns (uint24);
+
     function feeAddress() external view returns (address);
 }
