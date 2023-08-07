@@ -422,6 +422,28 @@ contract FarmlyPositionManager {
         );
     }
 
+    function getDebtRatio(
+        IFarmlyUniV3Executor executor,
+        uint256 positionID
+    ) public view returns (uint256 debtRatio) {
+        (, , uint256 debtUSD) = getDebtUSDValue(executor, positionID);
+        (, , uint256 totalUSD) = getPositionUSDValue(executor, positionID);
+
+        debtRatio = FarmlyFullMath.mulDiv(debtUSD, 1e6, totalUSD);
+    }
+
+    function getFlyScore(
+        IFarmlyUniV3Executor executor,
+        uint256 positionID
+    ) public view returns (uint256 flyScrore) {
+        uint256 debtRatio = getDebtRatio(executor, positionID);
+        flyScrore = FarmlyFullMath.mulDiv(
+            debtRatio,
+            10000,
+            farmlyConfig.liquidationThreshold()
+        );
+    }
+
     function getDebtUSDValue(
         IFarmlyUniV3Executor executor,
         uint256 positionID
