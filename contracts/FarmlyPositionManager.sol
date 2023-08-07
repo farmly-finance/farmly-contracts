@@ -41,7 +41,7 @@ contract FarmlyPositionManager {
     }
 
     IFarmlyConfig public farmlyConfig =
-        IFarmlyConfig(0x6E1A6Ac7A385a5C4c085C71A48B8C61CeBAf4a1b);
+        IFarmlyConfig(0xBc017650E1B704a01e069fa4189fccbf5D767f9C);
 
     uint256 constant MAX_INT =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
