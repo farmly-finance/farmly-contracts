@@ -6,6 +6,7 @@ import "./library/FarmlyFullMath.sol";
 import "./library/FarmlyStructs.sol";
 import "./library/FarmlyTransferHelper.sol";
 import "./interfaces/IFarmlyConfig.sol";
+import "./interfaces/IFarmlyUniV3Reader.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
@@ -27,6 +28,9 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
 
     IFarmlyConfig public farmlyConfig =
         IFarmlyConfig(0x6E1A6Ac7A385a5C4c085C71A48B8C61CeBAf4a1b);
+
+    IFarmlyUniV3Reader public farmlyUniV3Reader =
+        IFarmlyUniV3Reader(0x6E1A6Ac7A385a5C4c085C71A48B8C61CeBAf4a1b);
 
     function onERC721Received(
         address operator,
@@ -94,9 +98,8 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
         uint256 amount1Has,
         FarmlyStructs.SwapInfo memory swapInfo
     ) public returns (uint128 liquidity, uint256 amount0, uint256 amount1) {
-        (address token0, address token1, uint24 fee, , , ) = getPositionData(
-            uniV3PositionID
-        );
+        (address token0, address token1, uint24 fee, , , ) = farmlyUniV3Reader
+            .getPositionInfo(uniV3PositionID);
 
         FarmlyTransferHelper.safeTransferFrom(
             token0,
@@ -482,67 +485,5 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
                 owner,
                 token1.balanceOf(address(this))
             );
-    }
-
-    function getPositionAmounts(
-        uint256 uniV3PositionID
-    ) public view returns (uint256 amount0, uint256 amount1) {
-        (
-            ,
-            ,
-            address token0,
-            address token1,
-            uint24 fee,
-            int24 tickLower,
-            int24 tickUpper,
-            uint128 liquidity,
-            ,
-            ,
-            ,
-
-        ) = nonfungiblePositionManager.positions(uniV3PositionID);
-
-        IUniswapV3Pool pool = IUniswapV3Pool(
-            factory.getPool(token0, token1, fee)
-        );
-
-        (uint160 sqrtPriceX96, , , , , , ) = pool.slot0();
-
-        (amount0, amount1) = LiquidityAmounts.getAmountsForLiquidity(
-            sqrtPriceX96,
-            TickMath.getSqrtRatioAtTick(tickLower),
-            TickMath.getSqrtRatioAtTick(tickUpper),
-            liquidity
-        );
-    }
-
-    function getPositionData(
-        uint256 uniV3PositionID
-    )
-        public
-        view
-        returns (
-            address token0,
-            address token1,
-            uint24 fee,
-            int24 tickLower,
-            int24 tickUpper,
-            uint128 liquidity
-        )
-    {
-        (
-            ,
-            ,
-            token0,
-            token1,
-            fee,
-            tickLower,
-            tickUpper,
-            liquidity,
-            ,
-            ,
-            ,
-
-        ) = nonfungiblePositionManager.positions(uniV3PositionID);
     }
 }

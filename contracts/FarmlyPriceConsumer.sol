@@ -1,6 +1,7 @@
 pragma solidity >=0.5.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "./library/FarmlyFullMath.sol";
 
 contract FarmlyPriceConsumer is Ownable {
     struct FarmlyAggregator {
@@ -33,5 +34,13 @@ contract FarmlyPriceConsumer is Ownable {
         price =
             (uint256(token0Answer) * 10 ** 18) /
             (10 ** aggregator.decimals);
+    }
+
+    function calcUSDValue(
+        address token,
+        uint256 amount
+    ) public view returns (uint256 USDValue) {
+        uint256 price = getPrice(token);
+        USDValue = FarmlyFullMath.mulDiv(price, amount, 1e18);
     }
 }
