@@ -21,7 +21,7 @@ contract FarmlyUniV3Reader {
         IUniswapV3Factory(0x1F98431c8aD98523631AE4a59f267346ea31F984);
 
     IFarmlyPriceConsumer public farmlyPriceConsumer =
-        IFarmlyPriceConsumer(0x101E0DaB98F20Ed2cadb98df804811Cb7B57Cf71);
+        IFarmlyPriceConsumer(0x460d5108696E639fEf1d54E76F357810477aD084);
 
     function getPositionAmounts(
         uint256 uniV3PositionID

@@ -33,7 +33,7 @@ contract FarmlyPositionManager {
     }
 
     IFarmlyPriceConsumer public farmlyPriceConsumer =
-        IFarmlyPriceConsumer(0x101E0DaB98F20Ed2cadb98df804811Cb7B57Cf71);
+        IFarmlyPriceConsumer(0x460d5108696E639fEf1d54E76F357810477aD084);
     mapping(uint256 => Position) public positions;
     mapping(address => uint256[]) public userPositions;
     uint256 public nextPositionID;
@@ -46,7 +46,7 @@ contract FarmlyPositionManager {
         IFarmlyConfig(0xBc017650E1B704a01e069fa4189fccbf5D767f9C);
 
     IFarmlyUniV3Reader public farmlyUniV3Reader =
-        IFarmlyUniV3Reader(0x6E1A6Ac7A385a5C4c085C71A48B8C61CeBAf4a1b);
+        IFarmlyUniV3Reader(0xD7a1023507E0F41dcb451C44b64c2D4398A794C1);
 
     uint256 constant MAX_INT =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;

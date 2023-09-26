@@ -18,12 +18,7 @@ async function main() {
     `FarmlyConfig deployed to ${farmlyConfig.address}`
   );
   
-      const FarmlyPriceConsumer = await hre.ethers.getContractFactory("FarmlyPriceConsumer");
-      const farmlyPriceConsumer = await FarmlyPriceConsumer.deploy();
-      await farmlyPriceConsumer.deployed();
-      console.log(
-        `farmlyPriceConsumer deployed to ${farmlyPriceConsumer.address}`
-      );
+    
     */
   /* 
     const TestUSDC = await hre.ethers.getContractFactory("TestUSDC");
@@ -42,6 +37,22 @@ async function main() {
   
  
     */
+
+  /*
+    const FarmlyPriceConsumer = await hre.ethers.getContractFactory("FarmlyPriceConsumer");
+    const farmlyPriceConsumer = await FarmlyPriceConsumer.deploy();
+    await farmlyPriceConsumer.deployed();
+    console.log(
+      `FarmlyPriceConsumer deployed to ${farmlyPriceConsumer.address}`
+    );
+
+  const FarmlyUniV3Reader = await hre.ethers.getContractFactory("FarmlyUniV3Reader");
+  const farmlyUniV3Reader = await FarmlyUniV3Reader.deploy();
+  await farmlyUniV3Reader.deployed();
+  console.log(
+    `FarmlyUniV3Reader deployed to ${farmlyUniV3Reader.address}`
+  );
+  */
 
 
   const FarmlyVault = await hre.ethers.getContractFactory("FarmlyVault");
@@ -77,6 +88,7 @@ async function main() {
   console.log(
     `FarmlyUniV3Executor deployed to ${farmlyUniV3Executor.address}`
   );
+
   /*
 
 */
