@@ -6,9 +6,9 @@ contract FarmlyInterestModel {
     using Math for uint;
     uint256 public constant ONE_YEAR = 365 days;
 
-    uint256 public constant UTILIZATION_RAGE_1 = 70e18;
-    uint256 public constant UTILIZATION_RAGE_2 = 90e18;
-    uint256 public constant UTILIZATION_RAGE_3 = 100e18;
+    uint256 public constant UTILIZATION_RAGE_1 = 70e18; // 70%
+    uint256 public constant UTILIZATION_RAGE_2 = 90e18; // 90%
+    uint256 public constant UTILIZATION_RAGE_3 = 100e18; // 100%
 
     function getUtilization(
         uint256 debt,
@@ -29,6 +29,7 @@ contract FarmlyInterestModel {
         }
         uint256 utilization = getUtilization(debt, total);
         if (utilization < UTILIZATION_RAGE_1) {
+            // 0%-20%
             return
                 (
                     FarmlyFullMath.mulDiv(
@@ -38,8 +39,10 @@ contract FarmlyInterestModel {
                     )
                 ) / ONE_YEAR;
         } else if (utilization < UTILIZATION_RAGE_2) {
+            // 20%
             return 20e18 / ONE_YEAR;
         } else if (utilization < UTILIZATION_RAGE_3) {
+            // 20%-40%
             return
                 (20e18 +
                     ((utilization - UTILIZATION_RAGE_2) * (40e18 - (20e18))) /

@@ -51,7 +51,11 @@ contract FarmlyVault is ERC20, FarmlyInterestModel, Ownable {
             msg.sender,
             (totalToken() - amount) == 0
                 ? amount
-                : (amount * totalSupply()) / (totalToken() - amount)
+                : FarmlyFullMath.mulDiv(
+                    amount,
+                    totalSupply(),
+                    totalToken() - amount
+                )
         );
     }
 
@@ -59,7 +63,11 @@ contract FarmlyVault is ERC20, FarmlyInterestModel, Ownable {
     // totalToken = deposited ETH
 
     function withdraw(uint256 amount) public update(0) {
-        uint256 tokenAmount = (amount * totalToken()) / totalSupply();
+        uint256 tokenAmount = FarmlyFullMath.mulDiv(
+            amount,
+            totalToken(),
+            totalSupply()
+        );
         _burn(msg.sender, amount);
         token.transfer(msg.sender, tokenAmount);
     }
