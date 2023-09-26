@@ -4,6 +4,7 @@ pragma abicoder v2;
 import "./library/LiquidityAmountsLib.sol";
 import "./library/FarmlyFullMath.sol";
 import "./library/FarmlyStructs.sol";
+import "./library/FarmlyTransferHelper.sol";
 import "./interfaces/IFarmlyConfig.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
@@ -12,7 +13,6 @@ import "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "@uniswap/v3-periphery/contracts/base/LiquidityManagement.sol";
 
 contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
@@ -44,8 +44,20 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
         FarmlyStructs.PositionInfo memory positionInfo,
         FarmlyStructs.SwapInfo memory swapInfo
     ) public returns (uint256 tokenId) {
-        positionInfo.token0.transferFrom(msg.sender, address(this), amount0Has);
-        positionInfo.token1.transferFrom(msg.sender, address(this), amount1Has);
+        if (amount0Has > 0)
+            FarmlyTransferHelper.safeTransferFrom(
+                positionInfo.token0,
+                msg.sender,
+                address(this),
+                amount0Has
+            );
+        if (amount1Has > 0)
+            FarmlyTransferHelper.safeTransferFrom(
+                positionInfo.token1,
+                msg.sender,
+                address(this),
+                amount1Has
+            );
 
         swapExactInput(
             swapInfo.tokenIn,
@@ -63,12 +75,12 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
 
         tokenId = add(
             owner,
-            address(positionInfo.token0) == pool.token0()
-                ? positionInfo.token0
-                : positionInfo.token1,
-            address(positionInfo.token1) == pool.token1()
-                ? positionInfo.token1
-                : positionInfo.token0,
+            positionInfo.token0 == pool.token0()
+                ? IERC20Metadata(positionInfo.token0)
+                : IERC20Metadata(positionInfo.token1),
+            positionInfo.token1 == pool.token1()
+                ? IERC20Metadata(positionInfo.token1)
+                : IERC20Metadata(positionInfo.token0),
             positionInfo.poolFee,
             positionInfo.sqrtRatioAX96,
             positionInfo.sqrtRatioBX96
@@ -86,14 +98,14 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
             uniV3PositionID
         );
 
-        TransferHelper.safeTransferFrom(
+        FarmlyTransferHelper.safeTransferFrom(
             token0,
             msg.sender,
             address(this),
             amount0Has
         );
 
-        TransferHelper.safeTransferFrom(
+        FarmlyTransferHelper.safeTransferFrom(
             token1,
             msg.sender,
             address(this),
@@ -107,12 +119,12 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
             fee
         );
 
-        TransferHelper.safeApprove(
+        FarmlyTransferHelper.safeApprove(
             token0,
             address(nonfungiblePositionManager),
             IERC20(token0).balanceOf(address(this))
         );
-        TransferHelper.safeApprove(
+        FarmlyTransferHelper.safeApprove(
             token1,
             address(nonfungiblePositionManager),
             IERC20(token1).balanceOf(address(this))
@@ -133,14 +145,14 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
             .increaseLiquidity(params);
 
         if (IERC20(token0).balanceOf(address(this)) > 0)
-            TransferHelper.safeTransfer(
+            FarmlyTransferHelper.safeTransfer(
                 token0,
                 owner,
                 IERC20(token0).balanceOf(address(this))
             );
 
         if (IERC20(token1).balanceOf(address(this)) > 0)
-            TransferHelper.safeTransfer(
+            FarmlyTransferHelper.safeTransfer(
                 token1,
                 owner,
                 IERC20(token1).balanceOf(address(this))
@@ -212,21 +224,17 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
             amount0 -= amountIn;
         }
 
-        IERC20(token0).transfer(
+        FarmlyTransferHelper.safeTransfer(
+            token0,
             msg.sender,
             IERC20(token0).balanceOf(address(this))
         );
-        IERC20(token1).transfer(
+
+        FarmlyTransferHelper.safeTransfer(
+            token1,
             msg.sender,
             IERC20(token1).balanceOf(address(this))
         );
-
-        /*
-        address tokenIn,
-        address tokenOut,
-        uint amountIn,
-        uint24 poolFee
-        */
     }
 
     function collect(
@@ -255,14 +263,14 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
         amount0 -= amount0Fee;
         amount1 -= amount1Fee;
 
-        TransferHelper.safeTransfer(token0, owner, amount0);
-        TransferHelper.safeTransfer(token1, owner, amount1);
-        TransferHelper.safeTransfer(
+        FarmlyTransferHelper.safeTransfer(token0, owner, amount0);
+        FarmlyTransferHelper.safeTransfer(token1, owner, amount1);
+        FarmlyTransferHelper.safeTransfer(
             token0,
             farmlyConfig.feeAddress(),
             amount0Fee
         );
-        TransferHelper.safeTransfer(
+        FarmlyTransferHelper.safeTransfer(
             token1,
             farmlyConfig.feeAddress(),
             amount1Fee
@@ -333,11 +341,14 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
             amount0 -= amountIn;
         }
 
-        IERC20(token0).transfer(
+        FarmlyTransferHelper.safeTransfer(
+            token0,
             msg.sender,
             IERC20(token0).balanceOf(address(this))
         );
-        IERC20(token1).transfer(
+
+        FarmlyTransferHelper.safeTransfer(
+            token1,
             msg.sender,
             IERC20(token1).balanceOf(address(this))
         );
@@ -370,7 +381,11 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
         uint amountIn,
         uint24 poolFee
     ) private returns (uint amountOut) {
-        TransferHelper.safeApprove(tokenIn, address(swapRouter), amountIn);
+        FarmlyTransferHelper.safeApprove(
+            tokenIn,
+            address(swapRouter),
+            amountIn
+        );
 
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
             .ExactInputSingleParams({
@@ -394,7 +409,11 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
         uint amountOut,
         uint24 poolFee
     ) private returns (uint amountIn) {
-        TransferHelper.safeApprove(tokenIn, address(swapRouter), 2 ** 256 - 1);
+        FarmlyTransferHelper.safeApprove(
+            tokenIn,
+            address(swapRouter),
+            2 ** 256 - 1
+        );
 
         ISwapRouter.ExactOutputSingleParams memory params = ISwapRouter
             .ExactOutputSingleParams({
@@ -410,7 +429,7 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
 
         // The call to `exactInputSingle` executes the swap.
         amountIn = swapRouter.exactOutputSingle(params);
-        TransferHelper.safeApprove(tokenIn, address(swapRouter), 0);
+        FarmlyTransferHelper.safeApprove(tokenIn, address(swapRouter), 0);
     }
 
     function add(
@@ -421,12 +440,12 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
         uint160 sqrtRatioAX96,
         uint160 sqrtRatioBX96
     ) private returns (uint256 tokenId) {
-        TransferHelper.safeApprove(
+        FarmlyTransferHelper.safeApprove(
             address(token0),
             address(nonfungiblePositionManager),
             token0.balanceOf(address(this))
         );
-        TransferHelper.safeApprove(
+        FarmlyTransferHelper.safeApprove(
             address(token1),
             address(nonfungiblePositionManager),
             token1.balanceOf(address(this))
@@ -451,10 +470,18 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
         (tokenId, , , ) = nonfungiblePositionManager.mint(params);
 
         if (token0.balanceOf(address(this)) > 0)
-            token0.transfer(owner, token0.balanceOf(address(this)));
+            FarmlyTransferHelper.safeTransfer(
+                address(token0),
+                owner,
+                token0.balanceOf(address(this))
+            );
 
         if (token1.balanceOf(address(this)) > 0)
-            token1.transfer(owner, token1.balanceOf(address(this)));
+            FarmlyTransferHelper.safeTransfer(
+                address(token1),
+                owner,
+                token1.balanceOf(address(this))
+            );
     }
 
     function getPositionAmounts(
