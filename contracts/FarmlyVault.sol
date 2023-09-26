@@ -59,9 +59,6 @@ contract FarmlyVault is ERC20, FarmlyInterestModel, Ownable {
         );
     }
 
-    // totalSupply = flyETH
-    // totalToken = deposited ETH
-
     function withdraw(uint256 amount) public update(0) {
         uint256 tokenAmount = FarmlyFullMath.mulDiv(
             amount,
@@ -70,24 +67,6 @@ contract FarmlyVault is ERC20, FarmlyInterestModel, Ownable {
         );
         _burn(msg.sender, amount);
         token.transfer(msg.sender, tokenAmount);
-    }
-
-    function totalToken() public view returns (uint256) {
-        return token.balanceOf(address(this)) + totalDebt;
-    }
-
-    function pendingInterest(uint256 value) public view returns (uint256) {
-        if (block.timestamp > lastAction) {
-            uint256 timePast = block.timestamp - lastAction;
-            uint256 balance = token.balanceOf(address(this)) +
-                totalDebt -
-                value;
-            return
-                (getBorrowAPR(totalDebt, balance) * timePast * totalDebt) /
-                100e18;
-        } else {
-            return 0;
-        }
     }
 
     function borrow(
@@ -109,18 +88,30 @@ contract FarmlyVault is ERC20, FarmlyInterestModel, Ownable {
         return _removeDebt(debtShare);
     }
 
-    function _addDebt(uint256 debtAmount) internal returns (uint256) {
-        uint256 debtShare = debtToDebtShare(debtAmount);
-        totalDebt += debtAmount;
-        totalDebtShare += debtShare;
-        return debtShare;
+    function addBorrower(address _borrower) public onlyOwner {
+        borrower[_borrower] = true;
     }
 
-    function _removeDebt(uint256 debtShare) internal returns (uint256) {
-        uint256 debt = debtShareToDebt(debtShare);
-        totalDebtShare -= debtShare;
-        totalDebt -= debt;
-        return debt;
+    function removeBorrower(address _borrower) public onlyOwner {
+        borrower[_borrower] = false;
+    }
+
+    function totalToken() public view returns (uint256) {
+        return token.balanceOf(address(this)) + totalDebt;
+    }
+
+    function pendingInterest(uint256 value) public view returns (uint256) {
+        if (block.timestamp > lastAction) {
+            uint256 timePast = block.timestamp - lastAction;
+            uint256 balance = token.balanceOf(address(this)) +
+                totalDebt -
+                value;
+            return
+                (getBorrowAPR(totalDebt, balance) * timePast * totalDebt) /
+                100e18;
+        } else {
+            return 0;
+        }
     }
 
     function debtShareToDebt(uint256 debtShare) public view returns (uint256) {
@@ -141,11 +132,17 @@ contract FarmlyVault is ERC20, FarmlyInterestModel, Ownable {
             FarmlyFullMath.mulDiv(debt, totalDebtShare, totalDebt + interest);
     }
 
-    function addBorrower(address _borrower) public onlyOwner {
-        borrower[_borrower] = true;
+    function _addDebt(uint256 debtAmount) internal returns (uint256) {
+        uint256 debtShare = debtToDebtShare(debtAmount);
+        totalDebt += debtAmount;
+        totalDebtShare += debtShare;
+        return debtShare;
     }
 
-    function removeBorrower(address _borrower) public onlyOwner {
-        borrower[_borrower] = false;
+    function _removeDebt(uint256 debtShare) internal returns (uint256) {
+        uint256 debt = debtShareToDebt(debtShare);
+        totalDebtShare -= debtShare;
+        totalDebt -= debt;
+        return debt;
     }
 }
