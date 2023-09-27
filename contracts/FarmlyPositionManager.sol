@@ -1,7 +1,6 @@
 pragma solidity >=0.5.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./library/FarmlyFullMath.sol";
-import "./library/FarmlyStructs.sol";
 import "./library/FarmlyTransferHelper.sol";
 import "./interfaces/IFarmlyPriceConsumer.sol";
 import "./interfaces/IFarmlyConfig.sol";
@@ -18,13 +17,13 @@ contract FarmlyPositionManager is IFarmlyPositionManager {
     uint256 public nextPositionID;
 
     IFarmlyPriceConsumer public farmlyPriceConsumer =
-        IFarmlyPriceConsumer(0xF28f90B3c87e075eC5749383DC055dba72835B15);
+        IFarmlyPriceConsumer(0x9c4f571DD4831E8BEa53F373d0D01B26412dfb81);
 
     IFarmlyConfig public farmlyConfig =
-        IFarmlyConfig(0xBc017650E1B704a01e069fa4189fccbf5D767f9C);
+        IFarmlyConfig(0xDb9e463548FE6eB7e708Ffc81C639C6cF930E2C7);
 
     IFarmlyUniV3Reader public farmlyUniV3Reader =
-        IFarmlyUniV3Reader(0x8727Ded114fE87E8aEC40E51D29989fD66ccE622);
+        IFarmlyUniV3Reader(0x9133294767a4484203B93C516944038E9d18a854);
 
     constructor() {
         nextPositionID++;

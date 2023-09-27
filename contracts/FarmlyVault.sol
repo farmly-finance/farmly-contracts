@@ -18,7 +18,7 @@ contract FarmlyVault is ERC20, Ownable {
     mapping(address => bool) public borrower;
 
     IFarmlyConfig public farmlyConfig =
-        IFarmlyConfig(0xBc017650E1B704a01e069fa4189fccbf5D767f9C);
+        IFarmlyConfig(0xDb9e463548FE6eB7e708Ffc81C639C6cF930E2C7);
 
     constructor(
         IERC20 _token,

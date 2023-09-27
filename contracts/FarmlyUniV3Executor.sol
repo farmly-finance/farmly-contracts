@@ -27,10 +27,10 @@ contract FarmlyUniV3Executor is IERC721Receiver, LiquidityAmountsLib {
         IUniswapV3Factory(0x1F98431c8aD98523631AE4a59f267346ea31F984);
 
     IFarmlyConfig public farmlyConfig =
-        IFarmlyConfig(0x6E1A6Ac7A385a5C4c085C71A48B8C61CeBAf4a1b);
+        IFarmlyConfig(0xDb9e463548FE6eB7e708Ffc81C639C6cF930E2C7);
 
     IFarmlyUniV3Reader public farmlyUniV3Reader =
-        IFarmlyUniV3Reader(0x8727Ded114fE87E8aEC40E51D29989fD66ccE622);
+        IFarmlyUniV3Reader(0x9133294767a4484203B93C516944038E9d18a854);
 
     function onERC721Received(
         address operator,
