@@ -32,15 +32,27 @@ contract FarmlyPositionManager {
         DebtInfo debt1;
     }
 
-    IFarmlyPriceConsumer public farmlyPriceConsumer =
-        IFarmlyPriceConsumer(0xF28f90B3c87e075eC5749383DC055dba72835B15);
+    struct CreatePositionParams {
+        IFarmlyUniV3Executor executor;
+        uint amount0;
+        uint amount1;
+        VaultInfo vault0;
+        VaultInfo vault1;
+        FarmlyStructs.PositionInfo positionInfo;
+        FarmlyStructs.SwapInfo swapInfo;
+        SlippageProtection slippage;
+    }
+
+    uint256 constant MAX_INT =
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+
     mapping(uint256 => Position) public positions;
     mapping(address => uint256[]) public userPositions;
+
     uint256 public nextPositionID;
 
-    constructor() {
-        nextPositionID++;
-    }
+    IFarmlyPriceConsumer public farmlyPriceConsumer =
+        IFarmlyPriceConsumer(0xF28f90B3c87e075eC5749383DC055dba72835B15);
 
     IFarmlyConfig public farmlyConfig =
         IFarmlyConfig(0xBc017650E1B704a01e069fa4189fccbf5D767f9C);
@@ -48,8 +60,24 @@ contract FarmlyPositionManager {
     IFarmlyUniV3Reader public farmlyUniV3Reader =
         IFarmlyUniV3Reader(0x8727Ded114fE87E8aEC40E51D29989fD66ccE622);
 
-    uint256 constant MAX_INT =
-        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    constructor() {
+        nextPositionID++;
+    }
+
+    modifier updateDebtAmount(uint positionID) {
+        Position storage position = positions[positionID];
+        position.debt0.vault.debtAmount = position
+            .debt0
+            .vault
+            .vault
+            .debtShareToDebt(position.debt0.debtShare);
+        position.debt1.vault.debtAmount = position
+            .debt1
+            .vault
+            .vault
+            .debtShareToDebt(position.debt1.debtShare);
+        _;
+    }
 
     function createPosition(
         IFarmlyUniV3Executor executor,
@@ -108,21 +136,16 @@ contract FarmlyPositionManager {
             "SLIPPAGE: MIN_USD"
         );
 
-        uint debtUSD = farmlyPriceConsumer.calcUSDValue(
+        uint debtUSD = _calcDebtUSD(
             address(positionInfo.token0),
-            vault0.debtAmount
-        ) +
-            farmlyPriceConsumer.calcUSDValue(
-                address(positionInfo.token1),
-                vault1.debtAmount
-            );
+            vault0.debtAmount,
+            address(positionInfo.token1),
+            vault1.debtAmount
+        );
 
         require(
-            FarmlyFullMath.mulDiv(
-                positionTotalUSDValue,
-                1000000,
-                positionTotalUSDValue - debtUSD
-            ) < slippage.maxLeverageTolerance,
+            _calcLeverage(positionTotalUSDValue, debtUSD) <
+                slippage.maxLeverageTolerance,
             "SLIPPAGE: MAX_LEVERAGE"
         );
 
@@ -147,7 +170,7 @@ contract FarmlyPositionManager {
         uint debtAmount1,
         FarmlyStructs.SwapInfo memory swapInfo,
         SlippageProtection memory slippage
-    ) public {
+    ) public updateDebtAmount(positionID) {
         Position storage position = positions[positionID];
 
         executor.collect(position.uniV3PositionID, msg.sender);
@@ -200,21 +223,16 @@ contract FarmlyPositionManager {
             "SLIPPAGE: MIN_USD"
         );
 
-        uint debtUSD = farmlyPriceConsumer.calcUSDValue(
+        uint debtUSD = _calcDebtUSD(
             token0,
-            position.debt0.vault.debtAmount + debtAmount0
-        ) +
-            farmlyPriceConsumer.calcUSDValue(
-                token1,
-                position.debt1.vault.debtAmount + debtAmount1
-            );
+            position.debt0.vault.debtAmount + debtAmount0,
+            token1,
+            position.debt1.vault.debtAmount + debtAmount1
+        );
 
         require(
-            FarmlyFullMath.mulDiv(
-                positionTotalUSDValue,
-                1000000,
-                positionTotalUSDValue - debtUSD
-            ) < slippage.maxLeverageTolerance,
+            _calcLeverage(positionTotalUSDValue, debtUSD) <
+                slippage.maxLeverageTolerance,
             "SLIPPAGE: MAX_LEVERAGE"
         );
 
@@ -228,7 +246,7 @@ contract FarmlyPositionManager {
         IFarmlyUniV3Executor executor,
         uint positionID,
         uint24 decreasingPercent
-    ) public {
+    ) public updateDebtAmount(positionID) {
         Position storage position = positions[positionID];
 
         executor.collect(position.uniV3PositionID, msg.sender);
@@ -301,7 +319,7 @@ contract FarmlyPositionManager {
         uint256 debt1,
         FarmlyStructs.SwapInfo memory swapInfo,
         SlippageProtection memory slippage
-    ) public {
+    ) public updateDebtAmount(positionID) {
         Position storage position = positions[positionID];
         (
             uint256 amount0,
@@ -340,22 +358,16 @@ contract FarmlyPositionManager {
             "SLIPPAGE: MIN_USD"
         );
 
-        uint debtUSD = farmlyPriceConsumer.calcUSDValue(
+        uint debtUSD = _calcDebtUSD(
             token0,
-            position.debt0.vault.debtAmount + debt0
-        );
-
-        debtUSD += farmlyPriceConsumer.calcUSDValue(
+            position.debt0.vault.debtAmount + debt0,
             token1,
             position.debt1.vault.debtAmount + debt1
         );
 
         require(
-            FarmlyFullMath.mulDiv(
-                positionTotalUSDValue,
-                1000000,
-                positionTotalUSDValue - debtUSD
-            ) < slippage.maxLeverageTolerance,
+            _calcLeverage(positionTotalUSDValue, debtUSD) <
+                slippage.maxLeverageTolerance,
             "SLIPPAGE: MAX_LEVERAGE"
         );
 
@@ -368,17 +380,13 @@ contract FarmlyPositionManager {
     function closePosition(
         IFarmlyUniV3Executor executor,
         uint256 positionID
-    ) public {
+    ) public updateDebtAmount(positionID) {
         Position storage position = positions[positionID];
 
         executor.collect(position.uniV3PositionID, msg.sender);
 
-        uint256 debt0 = position.debt0.vault.vault.debtShareToDebt(
-            position.debt0.debtShare
-        );
-        uint256 debt1 = position.debt1.vault.vault.debtShareToDebt(
-            position.debt1.debtShare
-        );
+        uint256 debt0 = position.debt0.vault.debtAmount;
+        uint256 debt1 = position.debt1.vault.debtAmount;
 
         (
             uint256 amount0,
@@ -416,19 +424,15 @@ contract FarmlyPositionManager {
     function liquidatePosition(
         IFarmlyUniV3Executor executor,
         uint256 positionID
-    ) public {
+    ) public updateDebtAmount(positionID) {
         require(getFlyScore(positionID) >= 10000, "Can't liquidate");
 
         Position storage position = positions[positionID];
 
         executor.collect(position.uniV3PositionID, msg.sender);
 
-        uint256 debt0 = position.debt0.vault.vault.debtShareToDebt(
-            position.debt0.debtShare
-        );
-        uint256 debt1 = position.debt1.vault.vault.debtShareToDebt(
-            position.debt1.debtShare
-        );
+        uint256 debt0 = position.debt0.vault.debtAmount;
+        uint256 debt1 = position.debt1.vault.debtAmount;
 
         (
             uint256 amount0,
@@ -517,21 +521,15 @@ contract FarmlyPositionManager {
     }
 
     function getCurrentLeverage(
-        IFarmlyUniV3Executor executor,
         uint256 positionID
     ) public view returns (uint256 leverage) {
         (, , uint256 totalUSD) = getPositionUSDValue(positionID);
         (, , uint256 debtUSD) = getDebtUSDValue(positionID);
 
-        leverage = FarmlyFullMath.mulDiv(
-            totalUSD, // 500
-            1000000, // 100
-            totalUSD - debtUSD
-        );
+        leverage = _calcLeverage(totalUSD, debtUSD);
     }
 
     function getDebtRatios(
-        IFarmlyUniV3Executor executor,
         uint256 positionID
     ) public view returns (uint256 debtRatio0, uint256 debtRatio1) {
         (uint256 debt0, uint256 debt1, uint256 debtUSD) = getDebtUSDValue(
@@ -546,5 +544,23 @@ contract FarmlyPositionManager {
         address user
     ) public view returns (uint256[] memory) {
         return userPositions[user];
+    }
+
+    function _calcLeverage(
+        uint256 totalUSD,
+        uint256 debtUSD
+    ) internal pure returns (uint256 leverage) {
+        leverage = FarmlyFullMath.mulDiv(totalUSD, 1000000, totalUSD - debtUSD);
+    }
+
+    function _calcDebtUSD(
+        address token0,
+        uint debt0,
+        address token1,
+        uint debt1
+    ) internal view returns (uint debtUSD) {
+        debtUSD =
+            farmlyPriceConsumer.calcUSDValue(token0, debt0) +
+            farmlyPriceConsumer.calcUSDValue(token1, debt1);
     }
 }
