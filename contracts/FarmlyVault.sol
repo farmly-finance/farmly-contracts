@@ -5,9 +5,10 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "./library/FarmlyFullMath.sol";
-import "./FarmlyInterestModel.sol";
+import "./interfaces/IFarmlyInterestModel.sol";
+import "./interfaces/IFarmlyConfig.sol";
 
-contract FarmlyVault is ERC20, FarmlyInterestModel, Ownable {
+contract FarmlyVault is ERC20, Ownable {
     using Math for uint;
 
     IERC20 public token;
@@ -15,6 +16,9 @@ contract FarmlyVault is ERC20, FarmlyInterestModel, Ownable {
     uint256 public totalDebtShare;
     uint256 public lastAction;
     mapping(address => bool) public borrower;
+
+    IFarmlyConfig public farmlyConfig =
+        IFarmlyConfig(0xBc017650E1B704a01e069fa4189fccbf5D767f9C);
 
     constructor(
         IERC20 _token,
@@ -26,7 +30,7 @@ contract FarmlyVault is ERC20, FarmlyInterestModel, Ownable {
     }
 
     modifier transferToken(uint256 amount) {
-        token.transferFrom(msg.sender, address(this), amount);
+        if (amount > 0) token.transferFrom(msg.sender, address(this), amount);
         _;
     }
 
@@ -47,6 +51,7 @@ contract FarmlyVault is ERC20, FarmlyInterestModel, Ownable {
     function deposit(
         uint256 amount
     ) public transferToken(amount) update(amount) {
+        require(amount > 0, "AMOUNT:CANT_ZERO");
         _mint(
             msg.sender,
             (totalToken() - amount) == 0
@@ -60,6 +65,7 @@ contract FarmlyVault is ERC20, FarmlyInterestModel, Ownable {
     }
 
     function withdraw(uint256 amount) public update(0) {
+        require(amount > 0, "AMOUNT:CANT_ZERO");
         uint256 tokenAmount = FarmlyFullMath.mulDiv(
             amount,
             totalToken(),
@@ -72,7 +78,8 @@ contract FarmlyVault is ERC20, FarmlyInterestModel, Ownable {
     function borrow(
         uint256 amount
     ) public onlyBorrower update(amount) returns (uint) {
-        token.transfer(msg.sender, amount);
+        require(token.balanceOf(address(this)) > amount, "FUNDS:INSUFFICIENT");
+        if (amount > 0) token.transfer(msg.sender, amount);
         return _addDebt(amount);
     }
 
@@ -106,9 +113,12 @@ contract FarmlyVault is ERC20, FarmlyInterestModel, Ownable {
             uint256 balance = token.balanceOf(address(this)) +
                 totalDebt -
                 value;
+            IFarmlyInterestModel interestModel = farmlyConfig
+                .getVaultInterestModel(address(this));
             return
-                (getBorrowAPR(totalDebt, balance) * timePast * totalDebt) /
-                100e18;
+                (interestModel.getBorrowAPR(totalDebt, balance) *
+                    timePast *
+                    totalDebt) / 100e18;
         } else {
             return 0;
         }
