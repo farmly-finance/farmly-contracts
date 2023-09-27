@@ -60,22 +60,4 @@ interface IFarmlyUniV3Executor {
             address token1,
             uint24 poolFee
         );
-
-    function getPositionAmounts(
-        uint256 uniV3PositionID
-    ) external view returns (uint256 amount0, uint256 amount1);
-
-    function getPositionData(
-        uint256 uniV3PositionID
-    )
-        external
-        view
-        returns (
-            address token0,
-            address token1,
-            uint24 fee,
-            int24 tickLower,
-            int24 tickUpper,
-            uint128 liquidity
-        );
 }

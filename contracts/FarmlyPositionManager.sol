@@ -33,7 +33,7 @@ contract FarmlyPositionManager {
     }
 
     IFarmlyPriceConsumer public farmlyPriceConsumer =
-        IFarmlyPriceConsumer(0x460d5108696E639fEf1d54E76F357810477aD084);
+        IFarmlyPriceConsumer(0xF28f90B3c87e075eC5749383DC055dba72835B15);
     mapping(uint256 => Position) public positions;
     mapping(address => uint256[]) public userPositions;
     uint256 public nextPositionID;
@@ -46,7 +46,7 @@ contract FarmlyPositionManager {
         IFarmlyConfig(0xBc017650E1B704a01e069fa4189fccbf5D767f9C);
 
     IFarmlyUniV3Reader public farmlyUniV3Reader =
-        IFarmlyUniV3Reader(0xD7a1023507E0F41dcb451C44b64c2D4398A794C1);
+        IFarmlyUniV3Reader(0x8727Ded114fE87E8aEC40E51D29989fD66ccE622);
 
     uint256 constant MAX_INT =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
@@ -152,9 +152,8 @@ contract FarmlyPositionManager {
 
         executor.collect(position.uniV3PositionID, msg.sender);
 
-        (address token0, address token1, , , , ) = executor.getPositionData(
-            position.uniV3PositionID
-        );
+        (address token0, address token1, , , , ) = farmlyUniV3Reader
+            .getPositionInfo(position.uniV3PositionID);
 
         if (amount0 > 0)
             FarmlyTransferHelper.safeTransferFrom(
@@ -418,7 +417,7 @@ contract FarmlyPositionManager {
         IFarmlyUniV3Executor executor,
         uint256 positionID
     ) public {
-        require(getFlyScore(executor, positionID) >= 10000, "Can't liquidate");
+        require(getFlyScore(positionID) >= 10000, "Can't liquidate");
 
         Position storage position = positions[positionID];
 
@@ -477,20 +476,18 @@ contract FarmlyPositionManager {
     }
 
     function getDebtRatio(
-        IFarmlyUniV3Executor executor,
         uint256 positionID
     ) public view returns (uint256 debtRatio) {
-        (, , uint256 debtUSD) = getDebtUSDValue(executor, positionID);
+        (, , uint256 debtUSD) = getDebtUSDValue(positionID);
         (, , uint256 totalUSD) = getPositionUSDValue(positionID);
 
         debtRatio = FarmlyFullMath.mulDiv(debtUSD, 1e6, totalUSD);
     }
 
     function getFlyScore(
-        IFarmlyUniV3Executor executor,
         uint256 positionID
     ) public view returns (uint256 flyScrore) {
-        uint256 debtRatio = getDebtRatio(executor, positionID);
+        uint256 debtRatio = getDebtRatio(positionID);
         flyScrore = FarmlyFullMath.mulDiv(
             debtRatio,
             10000,
@@ -499,7 +496,6 @@ contract FarmlyPositionManager {
     }
 
     function getDebtUSDValue(
-        IFarmlyUniV3Executor executor,
         uint256 positionID
     )
         public
@@ -507,9 +503,8 @@ contract FarmlyPositionManager {
         returns (uint256 debt0USD, uint256 debt1USD, uint256 debtUSD)
     {
         Position memory position = positions[positionID];
-        (address token0, address token1, , , , ) = executor.getPositionData(
-            position.uniV3PositionID
-        );
+        (address token0, address token1, , , , ) = farmlyUniV3Reader
+            .getPositionInfo(position.uniV3PositionID);
         uint debt0 = position.debt0.vault.vault.debtShareToDebt(
             position.debt0.debtShare
         );
@@ -526,7 +521,7 @@ contract FarmlyPositionManager {
         uint256 positionID
     ) public view returns (uint256 leverage) {
         (, , uint256 totalUSD) = getPositionUSDValue(positionID);
-        (, , uint256 debtUSD) = getDebtUSDValue(executor, positionID);
+        (, , uint256 debtUSD) = getDebtUSDValue(positionID);
 
         leverage = FarmlyFullMath.mulDiv(
             totalUSD, // 500
@@ -540,7 +535,6 @@ contract FarmlyPositionManager {
         uint256 positionID
     ) public view returns (uint256 debtRatio0, uint256 debtRatio1) {
         (uint256 debt0, uint256 debt1, uint256 debtUSD) = getDebtUSDValue(
-            executor,
             positionID
         );
 

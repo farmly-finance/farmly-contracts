@@ -39,12 +39,13 @@ async function main() {
     */
 
   /*
-    const FarmlyPriceConsumer = await hre.ethers.getContractFactory("FarmlyPriceConsumer");
-    const farmlyPriceConsumer = await FarmlyPriceConsumer.deploy();
-    await farmlyPriceConsumer.deployed();
-    console.log(
-      `FarmlyPriceConsumer deployed to ${farmlyPriceConsumer.address}`
-    );
+
+  const FarmlyPriceConsumer = await hre.ethers.getContractFactory("FarmlyPriceConsumer");
+  const farmlyPriceConsumer = await FarmlyPriceConsumer.deploy();
+  await farmlyPriceConsumer.deployed();
+  console.log(
+    `FarmlyPriceConsumer deployed to ${farmlyPriceConsumer.address}`
+  );
 
   const FarmlyUniV3Reader = await hre.ethers.getContractFactory("FarmlyUniV3Reader");
   const farmlyUniV3Reader = await FarmlyUniV3Reader.deploy();
@@ -52,8 +53,7 @@ async function main() {
   console.log(
     `FarmlyUniV3Reader deployed to ${farmlyUniV3Reader.address}`
   );
-  */
-
+*/
 
   const FarmlyVault = await hre.ethers.getContractFactory("FarmlyVault");
   const farmlyVault = await FarmlyVault.deploy(process.env.VAULT_TOKEN, "Farmly USDC Interest Bearing", "flyUSDC");
@@ -70,7 +70,6 @@ async function main() {
     `FarmlyVault2 deployed to ${farmlyVault2.address}`
   );
 
-
   const FarmlyPositionManager = await hre.ethers.getContractFactory("FarmlyPositionManager");
   const farmlyPositionManager = await FarmlyPositionManager.deploy();
   await farmlyPositionManager.deployed();
@@ -78,9 +77,18 @@ async function main() {
     `FarmlyPositionManager deployed to ${farmlyPositionManager.address}`
   );
 
+  /*
+  const FarmlyVault = await ethers.getContractFactory("FarmlyVault");
+  const farmlyVault = await FarmlyVault.attach(
+    process.env.FARMLY_VAULT_CONTRACT_ADDRESS
+  );
+  const farmlyVault2 = await FarmlyVault.attach(
+    process.env.FARMLY_VAULT_2_CONTRACT_ADDRESS
+  );
+*/
+
   await farmlyVault.addBorrower(farmlyPositionManager.address);
   await farmlyVault2.addBorrower(farmlyPositionManager.address);
-
 
   const FarmlyUniV3Executor = await hre.ethers.getContractFactory("FarmlyUniV3Executor");
   const farmlyUniV3Executor = await FarmlyUniV3Executor.deploy();
@@ -90,7 +98,7 @@ async function main() {
   );
 
   /*
-
+ 
 */
 }
 
