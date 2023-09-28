@@ -1,6 +1,7 @@
 pragma solidity >=0.5.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./library/FarmlyFullMath.sol";
 import "./library/FarmlyTransferHelper.sol";
@@ -12,7 +13,8 @@ import "./interfaces/IFarmlyPositionManager.sol";
 contract FarmlyPositionManager is
     IFarmlyPositionManager,
     Pausable,
-    ReentrancyGuard
+    ReentrancyGuard,
+    Ownable
 {
     uint256 constant MAX_INT =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
@@ -33,6 +35,14 @@ contract FarmlyPositionManager is
 
     constructor() {
         nextPositionID++;
+    }
+
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
     }
 
     function createPosition(
