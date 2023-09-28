@@ -1,5 +1,7 @@
 pragma solidity >=0.5.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./library/FarmlyFullMath.sol";
 import "./library/FarmlyTransferHelper.sol";
 import "./interfaces/IFarmlyPriceConsumer.sol";
@@ -7,7 +9,11 @@ import "./interfaces/IFarmlyConfig.sol";
 import "./interfaces/IFarmlyUniV3Reader.sol";
 import "./interfaces/IFarmlyPositionManager.sol";
 
-contract FarmlyPositionManager is IFarmlyPositionManager {
+contract FarmlyPositionManager is
+    IFarmlyPositionManager,
+    Pausable,
+    ReentrancyGuard
+{
     uint256 constant MAX_INT =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
@@ -44,7 +50,9 @@ contract FarmlyPositionManager is IFarmlyPositionManager {
         _;
     }
 
-    function createPosition(CreatePositionParams calldata params) public {
+    function createPosition(
+        CreatePositionParams calldata params
+    ) public whenNotPaused nonReentrant {
         if (params.amount0 > 0)
             FarmlyTransferHelper.safeTransferFrom(
                 params.positionInfo.token0,
@@ -119,7 +127,7 @@ contract FarmlyPositionManager is IFarmlyPositionManager {
 
     function increasePosition(
         IncreasePositionParams calldata params
-    ) public updateDebtAmount(params.positionID) {
+    ) public updateDebtAmount(params.positionID) whenNotPaused nonReentrant {
         Position storage position = positions[params.positionID];
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
@@ -193,7 +201,7 @@ contract FarmlyPositionManager is IFarmlyPositionManager {
 
     function decreasePosition(
         DecreasePositionParams calldata params
-    ) public updateDebtAmount(params.positionID) {
+    ) public updateDebtAmount(params.positionID) nonReentrant {
         Position storage position = positions[params.positionID];
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
@@ -251,14 +259,16 @@ contract FarmlyPositionManager is IFarmlyPositionManager {
         position.debt1.vault.debtAmount -= debt1;
     }
 
-    function collectFees(CollectFeesParams calldata params) public {
+    function collectFees(
+        CollectFeesParams calldata params
+    ) public nonReentrant {
         Position storage position = positions[params.positionID];
         params.executor.collect(position.uniV3PositionID, msg.sender);
     }
 
     function collectAndIncrease(
         CollectAndIncreaseParams calldata params
-    ) public updateDebtAmount(params.positionID) {
+    ) public updateDebtAmount(params.positionID) whenNotPaused nonReentrant {
         Position storage position = positions[params.positionID];
         (
             uint256 amount0,
@@ -318,7 +328,7 @@ contract FarmlyPositionManager is IFarmlyPositionManager {
 
     function closePosition(
         ClosePositionParams calldata params
-    ) public updateDebtAmount(params.positionID) {
+    ) public updateDebtAmount(params.positionID) nonReentrant {
         Position storage position = positions[params.positionID];
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
@@ -361,7 +371,7 @@ contract FarmlyPositionManager is IFarmlyPositionManager {
 
     function liquidatePosition(
         LiquidatePositionParams calldata params
-    ) public updateDebtAmount(params.positionID) {
+    ) public updateDebtAmount(params.positionID) nonReentrant {
         require(getFlyScore(params.positionID) >= 10000, "Can't liquidate");
 
         Position storage position = positions[params.positionID];
