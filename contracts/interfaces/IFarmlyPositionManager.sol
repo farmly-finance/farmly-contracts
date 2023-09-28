@@ -17,7 +17,6 @@ interface IFarmlyPositionManager {
     struct DebtInfo {
         IFarmlyVault vault;
         uint debtShare;
-        uint debtAmount;
     }
 
     struct Position {

@@ -35,17 +35,6 @@ contract FarmlyPositionManager is
         nextPositionID++;
     }
 
-    modifier updateDebtAmount(uint positionID) {
-        Position storage position = positions[positionID];
-        position.debt0.debtAmount = position.debt0.vault.debtShareToDebt(
-            position.debt0.debtShare
-        );
-        position.debt1.debtAmount = position.debt1.vault.debtShareToDebt(
-            position.debt1.debtShare
-        );
-        _;
-    }
-
     function createPosition(
         CreatePositionParams calldata params
     ) public whenNotPaused nonReentrant {
@@ -112,8 +101,8 @@ contract FarmlyPositionManager is
         positions[nextPositionID] = Position(
             tokenId,
             msg.sender,
-            DebtInfo(params.vault0.vault, params.vault0.debtAmount, debtShare0),
-            DebtInfo(params.vault1.vault, params.vault1.debtAmount, debtShare1)
+            DebtInfo(params.vault0.vault, debtShare0),
+            DebtInfo(params.vault1.vault, debtShare1)
         );
 
         userPositions[msg.sender].push(nextPositionID);
@@ -123,7 +112,7 @@ contract FarmlyPositionManager is
 
     function increasePosition(
         IncreasePositionParams calldata params
-    ) public updateDebtAmount(params.positionID) whenNotPaused nonReentrant {
+    ) public whenNotPaused nonReentrant {
         Position storage position = positions[params.positionID];
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
@@ -178,9 +167,9 @@ contract FarmlyPositionManager is
 
         uint debtUSD = _calcDebtUSD(
             token0,
-            position.debt0.debtAmount + params.debtAmount0,
+            _debtShareToDebt(position.debt0) + params.debtAmount0,
             token1,
-            position.debt1.debtAmount + params.debtAmount1
+            _debtShareToDebt(position.debt1) + params.debtAmount1
         );
 
         require(
@@ -191,13 +180,11 @@ contract FarmlyPositionManager is
 
         position.debt0.debtShare += debtShare0;
         position.debt1.debtShare += debtShare1;
-        position.debt0.debtAmount += params.debtAmount0;
-        position.debt1.debtAmount += params.debtAmount1;
     }
 
     function decreasePosition(
         DecreasePositionParams calldata params
-    ) public updateDebtAmount(params.positionID) nonReentrant {
+    ) public nonReentrant {
         Position storage position = positions[params.positionID];
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
@@ -251,8 +238,6 @@ contract FarmlyPositionManager is
         position.debt1.debtShare -=
             (position.debt1.debtShare * params.decreasingPercent) /
             1000000;
-        position.debt0.debtAmount -= debt0;
-        position.debt1.debtAmount -= debt1;
     }
 
     function collectFees(
@@ -264,7 +249,7 @@ contract FarmlyPositionManager is
 
     function collectAndIncrease(
         CollectAndIncreaseParams calldata params
-    ) public updateDebtAmount(params.positionID) whenNotPaused nonReentrant {
+    ) public whenNotPaused nonReentrant {
         Position storage position = positions[params.positionID];
         (
             uint256 amount0,
@@ -305,9 +290,9 @@ contract FarmlyPositionManager is
 
         uint debtUSD = _calcDebtUSD(
             token0,
-            position.debt0.debtAmount + params.debt0,
+            _debtShareToDebt(position.debt0) + params.debt0,
             token1,
-            position.debt1.debtAmount + params.debt1
+            _debtShareToDebt(position.debt1) + params.debt1
         );
 
         require(
@@ -318,19 +303,17 @@ contract FarmlyPositionManager is
 
         position.debt0.debtShare += debtShare0;
         position.debt1.debtShare += debtShare1;
-        position.debt0.debtAmount += params.debt0;
-        position.debt1.debtAmount += params.debt1;
     }
 
     function closePosition(
         ClosePositionParams calldata params
-    ) public updateDebtAmount(params.positionID) nonReentrant {
+    ) public nonReentrant {
         Position storage position = positions[params.positionID];
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
 
-        uint256 debt0 = position.debt0.debtAmount;
-        uint256 debt1 = position.debt1.debtAmount;
+        uint256 debt0 = _debtShareToDebt(position.debt0);
+        uint256 debt1 = _debtShareToDebt(position.debt1);
 
         (
             uint256 amount0,
@@ -361,21 +344,19 @@ contract FarmlyPositionManager is
 
         position.debt0.debtShare = 0;
         position.debt1.debtShare = 0;
-        position.debt0.debtAmount = 0;
-        position.debt1.debtAmount = 0;
     }
 
     function liquidatePosition(
         LiquidatePositionParams calldata params
-    ) public updateDebtAmount(params.positionID) nonReentrant {
+    ) public nonReentrant {
         require(getFlyScore(params.positionID) >= 10000, "Can't liquidate");
 
         Position storage position = positions[params.positionID];
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
 
-        uint256 debt0 = position.debt0.debtAmount;
-        uint256 debt1 = position.debt1.debtAmount;
+        uint256 debt0 = _debtShareToDebt(position.debt0);
+        uint256 debt1 = _debtShareToDebt(position.debt1);
 
         (
             uint256 amount0,
@@ -406,8 +387,6 @@ contract FarmlyPositionManager is
 
         position.debt0.debtShare = 0;
         position.debt1.debtShare = 0;
-        position.debt0.debtAmount = 0;
-        position.debt1.debtAmount = 0;
     }
 
     function getPositionUSDValue(
@@ -505,5 +484,11 @@ contract FarmlyPositionManager is
         debtUSD =
             farmlyPriceConsumer.calcUSDValue(token0, debt0) +
             farmlyPriceConsumer.calcUSDValue(token1, debt1);
+    }
+
+    function _debtShareToDebt(
+        DebtInfo memory debt
+    ) internal view returns (uint256 debtAmount) {
+        debtAmount = debt.vault.debtShareToDebt(debt.debtShare);
     }
 }
