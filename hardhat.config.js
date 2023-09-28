@@ -41,5 +41,9 @@ module.exports = {
       accounts: [process.env.DEPLOYER_KEY],
       gas: 3000000
     },
+  },
+
+  etherscan: {
+    apiKey: "166EGR1ZCWS8G5AG94YNQYPZ3QHU558FTR"
   }
 };

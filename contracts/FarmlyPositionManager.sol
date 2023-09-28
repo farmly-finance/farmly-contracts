@@ -37,16 +37,12 @@ contract FarmlyPositionManager is
 
     modifier updateDebtAmount(uint positionID) {
         Position storage position = positions[positionID];
-        position.debt0.vault.debtAmount = position
-            .debt0
-            .vault
-            .vault
-            .debtShareToDebt(position.debt0.debtShare);
-        position.debt1.vault.debtAmount = position
-            .debt1
-            .vault
-            .vault
-            .debtShareToDebt(position.debt1.debtShare);
+        position.debt0.debtAmount = position.debt0.vault.debtShareToDebt(
+            position.debt0.debtShare
+        );
+        position.debt1.debtAmount = position.debt1.vault.debtShareToDebt(
+            position.debt1.debtShare
+        );
         _;
     }
 
@@ -116,8 +112,8 @@ contract FarmlyPositionManager is
         positions[nextPositionID] = Position(
             tokenId,
             msg.sender,
-            DebtInfo(params.vault0, debtShare0),
-            DebtInfo(params.vault1, debtShare1)
+            DebtInfo(params.vault0.vault, params.vault0.debtAmount, debtShare0),
+            DebtInfo(params.vault1.vault, params.vault1.debtAmount, debtShare1)
         );
 
         userPositions[msg.sender].push(nextPositionID);
@@ -150,8 +146,8 @@ contract FarmlyPositionManager is
                 params.amount1
             );
 
-        uint debtShare0 = position.debt0.vault.vault.borrow(params.debtAmount0);
-        uint debtShare1 = position.debt1.vault.vault.borrow(params.debtAmount1);
+        uint debtShare0 = position.debt0.vault.borrow(params.debtAmount0);
+        uint debtShare1 = position.debt1.vault.borrow(params.debtAmount1);
 
         FarmlyTransferHelper.safeApprove(
             token0,
@@ -182,9 +178,9 @@ contract FarmlyPositionManager is
 
         uint debtUSD = _calcDebtUSD(
             token0,
-            position.debt0.vault.debtAmount + params.debtAmount0,
+            position.debt0.debtAmount + params.debtAmount0,
             token1,
-            position.debt1.vault.debtAmount + params.debtAmount1
+            position.debt1.debtAmount + params.debtAmount1
         );
 
         require(
@@ -195,8 +191,8 @@ contract FarmlyPositionManager is
 
         position.debt0.debtShare += debtShare0;
         position.debt1.debtShare += debtShare1;
-        position.debt0.vault.debtAmount += params.debtAmount0;
-        position.debt1.vault.debtAmount += params.debtAmount1;
+        position.debt0.debtAmount += params.debtAmount0;
+        position.debt1.debtAmount += params.debtAmount1;
     }
 
     function decreasePosition(
@@ -206,10 +202,10 @@ contract FarmlyPositionManager is
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
 
-        uint256 debt0 = position.debt0.vault.vault.debtShareToDebt(
+        uint256 debt0 = position.debt0.vault.debtShareToDebt(
             (position.debt0.debtShare * params.decreasingPercent) / 1000000
         );
-        uint256 debt1 = position.debt1.vault.vault.debtShareToDebt(
+        uint256 debt1 = position.debt1.vault.debtShareToDebt(
             (position.debt1.debtShare * params.decreasingPercent) / 1000000
         );
 
@@ -229,20 +225,20 @@ contract FarmlyPositionManager is
 
         FarmlyTransferHelper.safeApprove(
             token0,
-            address(position.debt0.vault.vault),
+            address(position.debt0.vault),
             amount0
         );
 
         FarmlyTransferHelper.safeApprove(
             token1,
-            address(position.debt1.vault.vault),
+            address(position.debt1.vault),
             amount1
         );
 
-        position.debt0.vault.vault.close(
+        position.debt0.vault.close(
             (position.debt0.debtShare * params.decreasingPercent) / 1000000
         );
-        position.debt1.vault.vault.close(
+        position.debt1.vault.close(
             (position.debt1.debtShare * params.decreasingPercent) / 1000000
         );
 
@@ -255,8 +251,8 @@ contract FarmlyPositionManager is
         position.debt1.debtShare -=
             (position.debt1.debtShare * params.decreasingPercent) /
             1000000;
-        position.debt0.vault.debtAmount -= debt0;
-        position.debt1.vault.debtAmount -= debt1;
+        position.debt0.debtAmount -= debt0;
+        position.debt1.debtAmount -= debt1;
     }
 
     function collectFees(
@@ -277,8 +273,8 @@ contract FarmlyPositionManager is
             address token1
         ) = params.executor.collect(position.uniV3PositionID, address(this));
 
-        uint debtShare0 = position.debt0.vault.vault.borrow(params.debt0);
-        uint debtShare1 = position.debt1.vault.vault.borrow(params.debt1);
+        uint debtShare0 = position.debt0.vault.borrow(params.debt0);
+        uint debtShare1 = position.debt1.vault.borrow(params.debt1);
 
         FarmlyTransferHelper.safeApprove(
             token0,
@@ -309,9 +305,9 @@ contract FarmlyPositionManager is
 
         uint debtUSD = _calcDebtUSD(
             token0,
-            position.debt0.vault.debtAmount + params.debt0,
+            position.debt0.debtAmount + params.debt0,
             token1,
-            position.debt1.vault.debtAmount + params.debt1
+            position.debt1.debtAmount + params.debt1
         );
 
         require(
@@ -322,8 +318,8 @@ contract FarmlyPositionManager is
 
         position.debt0.debtShare += debtShare0;
         position.debt1.debtShare += debtShare1;
-        position.debt0.vault.debtAmount += params.debt0;
-        position.debt1.vault.debtAmount += params.debt1;
+        position.debt0.debtAmount += params.debt0;
+        position.debt1.debtAmount += params.debt1;
     }
 
     function closePosition(
@@ -333,8 +329,8 @@ contract FarmlyPositionManager is
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
 
-        uint256 debt0 = position.debt0.vault.debtAmount;
-        uint256 debt1 = position.debt1.vault.debtAmount;
+        uint256 debt0 = position.debt0.debtAmount;
+        uint256 debt1 = position.debt1.debtAmount;
 
         (
             uint256 amount0,
@@ -347,26 +343,26 @@ contract FarmlyPositionManager is
 
         FarmlyTransferHelper.safeApprove(
             token0,
-            address(position.debt0.vault.vault),
+            address(position.debt0.vault),
             amount0
         );
 
         FarmlyTransferHelper.safeApprove(
             token1,
-            address(position.debt1.vault.vault),
+            address(position.debt1.vault),
             amount1
         );
 
-        position.debt0.vault.vault.close(position.debt0.debtShare);
-        position.debt1.vault.vault.close(position.debt1.debtShare);
+        position.debt0.vault.close(position.debt0.debtShare);
+        position.debt1.vault.close(position.debt1.debtShare);
 
         FarmlyTransferHelper.safeTransfer(token0, msg.sender, amount0 - debt0);
         FarmlyTransferHelper.safeTransfer(token1, msg.sender, amount1 - debt1);
 
         position.debt0.debtShare = 0;
         position.debt1.debtShare = 0;
-        position.debt0.vault.debtAmount = 0;
-        position.debt1.vault.debtAmount = 0;
+        position.debt0.debtAmount = 0;
+        position.debt1.debtAmount = 0;
     }
 
     function liquidatePosition(
@@ -378,8 +374,8 @@ contract FarmlyPositionManager is
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
 
-        uint256 debt0 = position.debt0.vault.debtAmount;
-        uint256 debt1 = position.debt1.vault.debtAmount;
+        uint256 debt0 = position.debt0.debtAmount;
+        uint256 debt1 = position.debt1.debtAmount;
 
         (
             uint256 amount0,
@@ -392,26 +388,26 @@ contract FarmlyPositionManager is
 
         FarmlyTransferHelper.safeApprove(
             token0,
-            address(position.debt0.vault.vault),
+            address(position.debt0.vault),
             amount0
         );
 
         FarmlyTransferHelper.safeApprove(
             token1,
-            address(position.debt1.vault.vault),
+            address(position.debt1.vault),
             amount1
         );
 
-        position.debt0.vault.vault.close(position.debt0.debtShare);
-        position.debt1.vault.vault.close(position.debt1.debtShare);
+        position.debt0.vault.close(position.debt0.debtShare);
+        position.debt1.vault.close(position.debt1.debtShare);
 
         FarmlyTransferHelper.safeTransfer(token0, msg.sender, amount0 - debt0);
         FarmlyTransferHelper.safeTransfer(token1, msg.sender, amount1 - debt1);
 
         position.debt0.debtShare = 0;
         position.debt1.debtShare = 0;
-        position.debt0.vault.debtAmount = 0;
-        position.debt1.vault.debtAmount = 0;
+        position.debt0.debtAmount = 0;
+        position.debt1.debtAmount = 0;
     }
 
     function getPositionUSDValue(
@@ -456,10 +452,10 @@ contract FarmlyPositionManager is
         Position memory position = positions[positionID];
         (address token0, address token1, , , , ) = farmlyUniV3Reader
             .getPositionInfo(position.uniV3PositionID);
-        uint debt0 = position.debt0.vault.vault.debtShareToDebt(
+        uint debt0 = position.debt0.vault.debtShareToDebt(
             position.debt0.debtShare
         );
-        uint debt1 = position.debt1.vault.vault.debtShareToDebt(
+        uint debt1 = position.debt1.vault.debtShareToDebt(
             position.debt1.debtShare
         );
         debt0USD = farmlyPriceConsumer.calcUSDValue(token0, debt0);
