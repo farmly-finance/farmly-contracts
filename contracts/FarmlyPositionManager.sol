@@ -18,6 +18,8 @@ contract FarmlyPositionManager is
 {
     uint256 constant MAX_INT =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    uint256 constant RATIO_DENOMINATOR = 0xf4240; // 1e6
+    uint256 constant FLYSCORE_DENOMINATOR = 0x2710; // 1e4
 
     mapping(uint256 => Position) public positions;
     mapping(address => uint256[]) public userPositions;
@@ -200,10 +202,12 @@ contract FarmlyPositionManager is
         params.executor.collect(position.uniV3PositionID, msg.sender);
 
         uint256 debt0 = position.debt0.vault.debtShareToDebt(
-            (position.debt0.debtShare * params.decreasingPercent) / 1000000
+            (position.debt0.debtShare * params.decreasingPercent) /
+                RATIO_DENOMINATOR
         );
         uint256 debt1 = position.debt1.vault.debtShareToDebt(
-            (position.debt1.debtShare * params.decreasingPercent) / 1000000
+            (position.debt1.debtShare * params.decreasingPercent) /
+                RATIO_DENOMINATOR
         );
 
         (
@@ -233,10 +237,12 @@ contract FarmlyPositionManager is
         );
 
         position.debt0.vault.close(
-            (position.debt0.debtShare * params.decreasingPercent) / 1000000
+            (position.debt0.debtShare * params.decreasingPercent) /
+                RATIO_DENOMINATOR
         );
         position.debt1.vault.close(
-            (position.debt1.debtShare * params.decreasingPercent) / 1000000
+            (position.debt1.debtShare * params.decreasingPercent) /
+                RATIO_DENOMINATOR
         );
 
         FarmlyTransferHelper.safeTransfer(token0, msg.sender, amount0 - debt0);
@@ -244,10 +250,10 @@ contract FarmlyPositionManager is
 
         position.debt0.debtShare -=
             (position.debt0.debtShare * params.decreasingPercent) /
-            1000000;
+            RATIO_DENOMINATOR;
         position.debt1.debtShare -=
             (position.debt1.debtShare * params.decreasingPercent) /
-            1000000;
+            RATIO_DENOMINATOR;
     }
 
     function collectFees(
@@ -417,7 +423,7 @@ contract FarmlyPositionManager is
         (, , uint256 debtUSD) = getDebtUSDValue(positionID);
         (, , uint256 totalUSD) = getPositionUSDValue(positionID);
 
-        debtRatio = FarmlyFullMath.mulDiv(debtUSD, 1e6, totalUSD);
+        debtRatio = FarmlyFullMath.mulDiv(debtUSD, RATIO_DENOMINATOR, totalUSD);
     }
 
     function getFlyScore(
@@ -468,8 +474,8 @@ contract FarmlyPositionManager is
             positionID
         );
 
-        debtRatio0 = FarmlyFullMath.mulDiv(debt0, 1000000, debtUSD);
-        debtRatio1 = FarmlyFullMath.mulDiv(debt1, 1000000, debtUSD);
+        debtRatio0 = FarmlyFullMath.mulDiv(debt0, RATIO_DENOMINATOR, debtUSD);
+        debtRatio1 = FarmlyFullMath.mulDiv(debt1, RATIO_DENOMINATOR, debtUSD);
     }
 
     function getUserPositions(
@@ -482,7 +488,11 @@ contract FarmlyPositionManager is
         uint256 totalUSD,
         uint256 debtUSD
     ) internal pure returns (uint256 leverage) {
-        leverage = FarmlyFullMath.mulDiv(totalUSD, 1000000, totalUSD - debtUSD);
+        leverage = FarmlyFullMath.mulDiv(
+            totalUSD,
+            RATIO_DENOMINATOR,
+            totalUSD - debtUSD
+        );
     }
 
     function _calcDebtUSD(
