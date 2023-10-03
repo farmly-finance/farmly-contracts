@@ -116,3 +116,4 @@ typechain-types
 cache
 artifacts
 scripts
+contracts/FakeOracleEvent.sol

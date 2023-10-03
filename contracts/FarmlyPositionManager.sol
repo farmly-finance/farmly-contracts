@@ -47,6 +47,17 @@ contract FarmlyPositionManager is
         _unpause();
     }
 
+    /* 
+    EVENTS TODO:
+    positionCreated
+    positionIncreased
+    positionDecreased
+    feesCollected
+    feesHarvested
+    positionClosed
+    positionLiquidated
+    */
+
     function createPosition(
         CreatePositionParams calldata params
     ) public whenNotPaused nonReentrant {
