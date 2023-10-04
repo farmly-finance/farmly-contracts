@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/farmly-finance/farmly-contracts#readme",
   "dependencies": {
-    "@chainlink/contracts": "^0.6.1",
+    "@chainlink/contracts": "^0.7.1",
     "@openzeppelin/contracts": "^4.8.0",
     "@uniswap/v3-core": "github:Uniswap/v3-core#0.8",
     "@uniswap/v3-periphery": "github:Uniswap/v3-periphery#0.8",
