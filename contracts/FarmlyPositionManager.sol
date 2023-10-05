@@ -3,7 +3,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@chainlink/contracts/src/v0.8/automation/AutomationCompatible.sol";
 import "./library/FarmlyFullMath.sol";
 import "./library/FarmlyTransferHelper.sol";
 import "./interfaces/IFarmlyPriceConsumer.sol";
@@ -15,8 +14,7 @@ contract FarmlyPositionManager is
     IFarmlyPositionManager,
     Pausable,
     ReentrancyGuard,
-    Ownable,
-    AutomationCompatibleInterface
+    Ownable
 {
     uint256 constant MAX_INT =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
@@ -48,21 +46,6 @@ contract FarmlyPositionManager is
     function unpause() public onlyOwner {
         _unpause();
     }
-
-    /* ---CHAINLIK AUTOMATION START--- */
-
-    function checkUpkeep(
-        bytes calldata checkData
-    )
-        external
-        view
-        override
-        returns (bool upkeepNeeded, bytes memory performData)
-    {}
-
-    function performUpkeep(bytes calldata performData) external override {}
-
-    /* ---CHAINLIK AUTOMATION END--- */
 
     /* 
     EVENTS TODO:
