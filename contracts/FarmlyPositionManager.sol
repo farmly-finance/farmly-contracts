@@ -376,7 +376,7 @@ contract FarmlyPositionManager is
     function liquidatePosition(
         LiquidatePositionParams calldata params
     ) public nonReentrant {
-        require(getFlyScore(params.positionID) >= 10000, "Can't liquidate");
+        require(getFlyScore(params.positionID) >= 10000, "CANT_LIQUIDATE");
 
         Position storage position = positions[params.positionID];
 
