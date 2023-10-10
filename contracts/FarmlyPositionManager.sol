@@ -440,6 +440,10 @@ contract FarmlyPositionManager is
         activePositions.pop();
     }
 
+    function getActivePositionsLength() public view returns (uint256) {
+        return activePositions.length;
+    }
+
     function getPositionUSDValue(
         uint256 positionID
     )
