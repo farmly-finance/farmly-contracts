@@ -24,6 +24,8 @@ contract FarmlyPositionManager is
     mapping(uint256 => Position) public positions;
     mapping(address => uint256[]) public userPositions;
 
+    uint256[] public activePositions;
+    mapping(uint256 => uint256) private _activePositionsIndex; // positionID => index
     uint256 public nextPositionID;
 
     IFarmlyPriceConsumer public farmlyPriceConsumer =
@@ -128,9 +130,7 @@ contract FarmlyPositionManager is
             DebtInfo(params.vault1.vault, debtShare1)
         );
 
-        userPositions[msg.sender].push(nextPositionID);
-
-        nextPositionID++;
+        _addPosition();
     }
 
     function increasePosition(
@@ -371,6 +371,8 @@ contract FarmlyPositionManager is
 
         position.debt0.debtShare = 0;
         position.debt1.debtShare = 0;
+
+        _removePosition(params.positionID);
     }
 
     function liquidatePosition(
@@ -414,6 +416,28 @@ contract FarmlyPositionManager is
 
         position.debt0.debtShare = 0;
         position.debt1.debtShare = 0;
+
+        _removePosition(params.positionID);
+    }
+
+    function _addPosition() internal {
+        userPositions[msg.sender].push(nextPositionID);
+        _activePositionsIndex[nextPositionID] = activePositions.length;
+        activePositions.push(nextPositionID);
+        nextPositionID++;
+    }
+
+    function _removePosition(uint256 positionID) internal {
+        uint256 lastPositionIndex = activePositions.length - 1;
+        uint256 positionIndex = _activePositionsIndex[positionID];
+
+        uint256 lastPositionID = activePositions[lastPositionIndex];
+
+        activePositions[positionIndex] = lastPositionID;
+        _activePositionsIndex[lastPositionID] = positionIndex;
+
+        delete _activePositionsIndex[positionID];
+        activePositions.pop();
     }
 
     function getPositionUSDValue(
