@@ -84,15 +84,12 @@ async function main() {
     `FarmlyUniV3Reader deployed to ${farmlyUniV3Reader.address}`
   );
   */
-  /*
-    const FarmlyPositionManager = await hre.ethers.getContractFactory("FarmlyPositionManager");
-    const farmlyPositionManager = await FarmlyPositionManager.deploy();
-    await farmlyPositionManager.deployed();
-    console.log(
-      `FarmlyPositionManager deployed to ${farmlyPositionManager.address}`
-    );
-  */
-  /*
+  const FarmlyPositionManager = await hre.ethers.getContractFactory("FarmlyPositionManager");
+  const farmlyPositionManager = await FarmlyPositionManager.deploy();
+  await farmlyPositionManager.deployed();
+  console.log(
+    `FarmlyPositionManager deployed to ${farmlyPositionManager.address}`
+  );
   const FarmlyVault = await ethers.getContractFactory("FarmlyVault");
   const farmlyVault = await FarmlyVault.attach(
     process.env.FARMLY_VAULT_CONTRACT_ADDRESS
@@ -100,17 +97,14 @@ async function main() {
   const farmlyVault2 = await FarmlyVault.attach(
     process.env.FARMLY_VAULT_2_CONTRACT_ADDRESS
   );
-*/
-  /*
-    await farmlyVault.addBorrower(farmlyPositionManager.address);
-    await farmlyVault2.addBorrower(farmlyPositionManager.address);
+  await farmlyVault.addBorrower(farmlyPositionManager.address);
+  await farmlyVault2.addBorrower(farmlyPositionManager.address);
   const FarmlyUniV3Executor = await hre.ethers.getContractFactory("FarmlyUniV3Executor");
   const farmlyUniV3Executor = await FarmlyUniV3Executor.deploy();
   await farmlyUniV3Executor.deployed();
   console.log(
     `FarmlyUniV3Executor deployed to ${farmlyUniV3Executor.address}`
   );
-  */
 
 }
 
