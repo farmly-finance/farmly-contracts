@@ -30,7 +30,7 @@ interface IFarmlyInterestModel {
     /// @dev Implementation of the interest model determined for the vault.
     /// @param debt Total debt amount
     /// @param total Total supplied amount to vault
-    /// @return borrowAPR Borrowing APR in one seconds
+    /// @return borrowAPR Borrowing APR for one second
     function getBorrowAPR(
         uint256 debt,
         uint256 total
