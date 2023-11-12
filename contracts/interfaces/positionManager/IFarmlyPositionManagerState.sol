@@ -28,7 +28,7 @@ interface IFarmlyPositionManagerState {
     function positions(uint256) external view returns (Position memory);
 
     /// @notice Stores the ids of the user's positions
-    /// @return Returns user's positions ids in array
+    /// @return Returns user's positions id
     function userPositions(address) external view returns (uint256[] memory);
 
     /// @notice Stores active positions
