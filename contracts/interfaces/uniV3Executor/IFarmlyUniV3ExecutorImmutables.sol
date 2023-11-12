@@ -3,6 +3,7 @@ import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.s
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "../IFarmlyConfig.sol";
+import "../IFarmlyUniV3Reader.sol";
 
 /// @title Uniswap V3 Executor state that never changes
 /// @notice These parameters are fixed for a executor, they are fixed forever.
@@ -33,5 +34,5 @@ interface IFarmlyUniV3ExecutorImmutables {
     /// @notice Farmly Uniswap V3 Reader
     /// @dev Used to read the open position information on the Uniswap.
     /// @return Returns the IFarmlyUniV3Reader contract.
-    function farmlyUniV3Reader() external view returns (address);
+    function farmlyUniV3Reader() external view returns (IFarmlyUniV3Reader);
 }
