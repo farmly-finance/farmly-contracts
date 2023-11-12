@@ -4,6 +4,7 @@ import "./positionManager/IFarmlyPositionManagerState.sol";
 import "./positionManager/IFarmlyPositionManagerDerivedState.sol";
 import "./positionManager/IFarmlyPositionManagerActions.sol";
 import "./positionManager/IFarmlyPositionManagerOwnerActions.sol";
+import "./positionManager/IFarmlyPositionManagerEvents.sol";
 
 /// @title Interface for Position Manager
 /// @notice All positions opened on Farmly Finance
@@ -13,7 +14,8 @@ interface IFarmlyPositionManager is
     IFarmlyPositionManagerState,
     IFarmlyPositionManagerDerivedState,
     IFarmlyPositionManagerActions,
-    IFarmlyPositionManagerOwnerActions
+    IFarmlyPositionManagerOwnerActions,
+    IFarmlyPositionManagerEvents
 {
 
 }
