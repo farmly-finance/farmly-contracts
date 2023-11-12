@@ -3,7 +3,6 @@ pragma solidity >=0.5.0;
 /// @title The interface for the Farmly Interest Model
 /// @notice The Farmly Interest Model makes managing the Vault's interest model easier
 /// @dev For all percentages, 1% = 1e18.
-
 interface IFarmlyInterestModel {
     /// @notice The first range for utilization
     /// @return The top of the range

@@ -1,4 +1,5 @@
 pragma solidity >=0.5.0;
+import "../IFarmlyConfig.sol";
 
 /// @title Vault state that never changes
 /// @notice These parameters are fixed for a vault, they are fixed forever.
@@ -10,5 +11,5 @@ interface IFarmlyVaultImmutables {
 
     /// @notice Config contract for use of protocol configrations
     /// @return Farmly config contract
-    function farmlyConfig() external view returns (address);
+    function farmlyConfig() external view returns (IFarmlyConfig);
 }
