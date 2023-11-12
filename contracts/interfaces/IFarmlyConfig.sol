@@ -52,4 +52,9 @@ interface IFarmlyConfig {
         address vault,
         IFarmlyInterestModel interestModel
     ) external;
+
+    /// @notice Emitted when vault interest model is changed
+    /// @param vault The vault contract address
+    /// @param interestModel The interest model contract address
+    event VaultInterestModel(address indexed vault, address interestModel);
 }
