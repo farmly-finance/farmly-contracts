@@ -70,11 +70,4 @@ interface IFarmlyPositionManagerDerivedState {
     function getDebtRatios(
         uint256 positionID
     ) external view returns (uint256 debtRatio0, uint256 debtRatio1);
-
-    /// @notice User positions in array
-    /// @param user User wallet address
-    /// @return Returns user's positions ids in array
-    function getUserPositions(
-        address user
-    ) external view returns (uint256[] memory);
 }
