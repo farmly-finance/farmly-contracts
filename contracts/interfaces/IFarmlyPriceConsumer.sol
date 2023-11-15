@@ -15,7 +15,7 @@ interface IFarmlyPriceConsumer {
     /// @return Returns Chainlink Aggregator and price decimals.
     function aggregators(
         address
-    ) external view returns (FarmlyAggregator memory);
+    ) external view returns (AggregatorV3Interface, uint256);
 
     /// @notice Returns the current price for the token.
     /// @dev The current token price is calculated using the data of the latest round.
