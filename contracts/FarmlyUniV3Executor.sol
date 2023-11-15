@@ -17,7 +17,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-contract FarmlyUniV3Exector is IFarmlyUniV3Executor, IERC721Receiver {
+contract FarmlyUniV3Executor is IFarmlyUniV3Executor, IERC721Receiver {
     /// @inheritdoc IFarmlyUniV3ExecutorImmutables
     INonfungiblePositionManager public override nonfungiblePositionManager;
     /// @inheritdoc IFarmlyUniV3ExecutorImmutables
