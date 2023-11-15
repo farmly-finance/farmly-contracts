@@ -46,7 +46,7 @@ contract FarmlyUniV3Exector is IFarmlyUniV3Executor, IERC721Receiver {
         uint256 amount1Has,
         PositionInfo memory positionInfo,
         SwapInfo memory swapInfo
-    ) public override returns (uint256 tokenId) {
+    ) public override returns (uint256) {
         if (amount0Has > 0)
             FarmlyTransferHelper.safeTransferFrom(
                 positionInfo.token0,
@@ -77,7 +77,7 @@ contract FarmlyUniV3Exector is IFarmlyUniV3Executor, IERC721Receiver {
             )
         );
 
-        tokenId = add(
+        (uint256 tokenId, uint256 amount0, uint256 amount1) = add(
             owner,
             positionInfo.token0 == pool.token0()
                 ? IERC20Metadata(positionInfo.token0)
@@ -89,6 +89,16 @@ contract FarmlyUniV3Exector is IFarmlyUniV3Executor, IERC721Receiver {
             positionInfo.sqrtRatioAX96,
             positionInfo.sqrtRatioBX96
         );
+
+        emit Execute(
+            tokenId,
+            positionInfo.token0,
+            positionInfo.token1,
+            amount0,
+            amount1
+        );
+
+        return tokenId;
     }
 
     /// @inheritdoc IFarmlyUniV3Executor
@@ -165,6 +175,8 @@ contract FarmlyUniV3Exector is IFarmlyUniV3Executor, IERC721Receiver {
                 owner,
                 IERC20(token1).balanceOf(address(this))
             );
+
+        emit Increase(uniV3PositionID, token0, token1, amount0, amount1);
     }
 
     /// @inheritdoc IFarmlyUniV3Executor
@@ -233,6 +245,8 @@ contract FarmlyUniV3Exector is IFarmlyUniV3Executor, IERC721Receiver {
             msg.sender,
             IERC20(token1).balanceOf(address(this))
         );
+
+        emit Decrease(uniV3PositionID, token0, token1, amount0, amount1);
     }
 
     /// @inheritdoc IFarmlyUniV3Executor
@@ -277,6 +291,8 @@ contract FarmlyUniV3Exector is IFarmlyUniV3Executor, IERC721Receiver {
             farmlyConfig.feeAddress(),
             amount1Fee
         );
+
+        emit Collect(uniV3PositionID, token0, token1, amount0, amount1);
     }
 
     /// @inheritdoc IFarmlyUniV3Executor
@@ -344,6 +360,8 @@ contract FarmlyUniV3Exector is IFarmlyUniV3Executor, IERC721Receiver {
             msg.sender,
             IERC20(token1).balanceOf(address(this))
         );
+
+        emit Close(uniV3PositionID, token0, token1, amount0, amount1);
     }
 
     /// Swap tokens with exact input by calling to ISwapRouter
@@ -412,7 +430,7 @@ contract FarmlyUniV3Exector is IFarmlyUniV3Executor, IERC721Receiver {
         uint24 poolFee,
         uint160 sqrtRatioAX96,
         uint160 sqrtRatioBX96
-    ) private returns (uint256 tokenId) {
+    ) private returns (uint256 tokenId, uint256 amount0, uint256 amount1) {
         FarmlyTransferHelper.safeApprove(
             address(token0),
             address(nonfungiblePositionManager),
@@ -439,7 +457,7 @@ contract FarmlyUniV3Exector is IFarmlyUniV3Executor, IERC721Receiver {
                 deadline: block.timestamp
             });
 
-        (tokenId, , , ) = nonfungiblePositionManager.mint(params);
+        (tokenId, , amount0, amount1) = nonfungiblePositionManager.mint(params);
 
         if (token0.balanceOf(address(this)) > 0)
             FarmlyTransferHelper.safeTransfer(
