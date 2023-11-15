@@ -39,6 +39,17 @@ contract FarmlyPositionManager is
     /// Denominator for flyScore
     uint256 constant FLYSCORE_DENOMINATOR = 0x2710; // 1e4
 
+    constructor(
+        IFarmlyPriceConsumer _farmlyPriceConsumer,
+        IFarmlyConfig _farmlyConfig,
+        IFarmlyUniV3Reader _farmlyUniV3Reader
+    ) {
+        farmlyPriceConsumer = _farmlyPriceConsumer;
+        farmlyConfig = _farmlyConfig;
+        farmlyUniV3Reader = _farmlyUniV3Reader;
+        nextPositionID++;
+    }
+
     /// @inheritdoc IFarmlyPositionManagerState
     function userPositions(
         address user
