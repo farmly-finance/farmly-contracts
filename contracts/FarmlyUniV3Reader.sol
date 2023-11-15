@@ -18,6 +18,16 @@ contract FarmlyUniV3Reader is IFarmlyUniV3Reader {
     /// @inheritdoc IFarmlyUniV3Reader
     IFarmlyPriceConsumer public override farmlyPriceConsumer;
 
+    constructor(
+        INonfungiblePositionManager _nonfungiblePositionManager,
+        IUniswapV3Factory _factory,
+        IFarmlyPriceConsumer _farmlyPriceConsumer
+    ) {
+        nonfungiblePositionManager = _nonfungiblePositionManager;
+        factory = _factory;
+        farmlyPriceConsumer = _farmlyPriceConsumer;
+    }
+
     /// @inheritdoc IFarmlyUniV3Reader
     function getPositionAmounts(
         uint256 uniV3PositionID
