@@ -24,8 +24,21 @@ interface IFarmlyPositionManagerState {
 
     /// @notice Stores position info
     /// @dev Each position must be stored when opened.
-    /// @return Returns position info
-    function positions(uint256) external view returns (Position memory);
+    /// @return uniV3PositionID Token id of Uniswap V3 position
+    /// @return owner Owner of position
+    /// @return debt0 Debt info for token0
+    /// @return debt1 Debt info for token1
+    function positions(
+        uint256
+    )
+        external
+        view
+        returns (
+            uint uniV3PositionID,
+            address owner,
+            DebtInfo memory debt0,
+            DebtInfo memory debt1
+        );
 
     /// @notice Stores the ids of the user's positions
     /// @return Returns user's positions id
