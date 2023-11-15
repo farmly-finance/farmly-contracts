@@ -1,5 +1,6 @@
 require("@nomicfoundation/hardhat-toolbox");
 require('dotenv').config();
+require('hardhat-deploy');
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -16,6 +17,9 @@ module.exports = {
     },
   },
 
+  namedAccounts: {
+    deployer: { default: 0 }
+  },
   networks: {
     localhost: {
       url: "http://127.0.0.1:8545",
