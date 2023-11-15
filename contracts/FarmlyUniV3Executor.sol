@@ -29,6 +29,20 @@ contract FarmlyUniV3Exector is IFarmlyUniV3Executor, IERC721Receiver {
     /// @inheritdoc IFarmlyUniV3ExecutorImmutables
     IFarmlyUniV3Reader public override farmlyUniV3Reader;
 
+    constructor(
+        INonfungiblePositionManager _nonfungiblePositionManager,
+        ISwapRouter _swapRouter,
+        IUniswapV3Factory _factory,
+        IFarmlyConfig _farmlyConfig,
+        IFarmlyUniV3Reader _farmlyUniV3Reader
+    ) {
+        nonfungiblePositionManager = _nonfungiblePositionManager;
+        swapRouter = _swapRouter;
+        factory = _factory;
+        farmlyConfig = _farmlyConfig;
+        farmlyUniV3Reader = _farmlyUniV3Reader;
+    }
+
     /// @inheritdoc IERC721Receiver
     function onERC721Received(
         address operator,
