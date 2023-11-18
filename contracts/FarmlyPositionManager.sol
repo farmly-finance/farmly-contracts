@@ -39,11 +39,6 @@ contract FarmlyPositionManager is
     /// Denominator for flyScore
     uint256 constant FLYSCORE_DENOMINATOR = 0x2710; // 1e4
 
-    modifier onlyPositionOwner(uint256 positionID) {
-        require(msg.sender == positions[positionID].owner, "NOT_OWNER");
-        _;
-    }
-
     constructor(
         IFarmlyPriceConsumer _farmlyPriceConsumer,
         IFarmlyConfig _farmlyConfig,
