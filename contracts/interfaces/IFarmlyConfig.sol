@@ -53,6 +53,31 @@ interface IFarmlyConfig {
         IFarmlyInterestModel interestModel
     ) external;
 
+    /// @notice Setting the performance fee for Uniswap
+    /// @dev Can only be called by the owner.
+    /// @param fee Performance fee rate
+    function setUniPerformanceFee(uint24 fee) external;
+
+    /// @notice Setting the fee on interest paid to vaults
+    /// @dev Can only be called by the owner.
+    /// @param fee Fee rate
+    function setVaultPerformanceFee(uint24 fee) external;
+
+    /// @notice Setting the liquidation performance fee
+    /// @dev Can only be called by the owner.
+    /// @param fee Liquidation performance fee rate
+    function setLiquidationPerformanceFee(uint24 fee) external;
+
+    /// @notice Setting the maximum liquidation threshold
+    /// @dev Can only be called by the owner.
+    /// @param threshold The liquidation threshold rate.
+    function setLiquidationThreshold(uint24 threshold) external;
+
+    /// @notice Setting the address for fees
+    /// @dev Can only be called by the owner.
+    /// @param _feeAddress The address for fees.
+    function setFeeAddress(address _feeAddress) external;
+
     /// @notice Emitted when vault interest model is changed
     /// @param vault The vault contract address
     /// @param interestModel The interest model contract address

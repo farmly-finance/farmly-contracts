@@ -35,4 +35,33 @@ contract FarmlyConfig is IFarmlyConfig, Ownable {
         vaultInterestModel[vault] = interestModel;
         emit VaultInterestModel(vault, address(interestModel));
     }
+
+    /// @inheritdoc IFarmlyConfig
+    function setUniPerformanceFee(uint24 fee) public override onlyOwner {
+        uniPerformanceFee = fee;
+    }
+
+    /// @inheritdoc IFarmlyConfig
+    function setVaultPerformanceFee(uint24 fee) public override onlyOwner {
+        vaultPerformanceFee = fee;
+    }
+
+    /// @inheritdoc IFarmlyConfig
+    function setLiquidationPerformanceFee(
+        uint24 fee
+    ) public override onlyOwner {
+        liquidationPerformanceFee = fee;
+    }
+
+    /// @inheritdoc IFarmlyConfig
+    function setLiquidationThreshold(
+        uint24 threshold
+    ) public override onlyOwner {
+        liquidationThreshold = threshold;
+    }
+
+    /// @inheritdoc IFarmlyConfig
+    function setFeeAddress(address _feeAddress) public override onlyOwner {
+        feeAddress = _feeAddress;
+    }
 }
