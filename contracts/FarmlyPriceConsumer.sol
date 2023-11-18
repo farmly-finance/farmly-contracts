@@ -5,7 +5,7 @@ import "./libraries/FarmlyFullMath.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract FarmlyPriceConsumer is IFarmlyPriceConsumer {
+contract FarmlyPriceConsumer is IFarmlyPriceConsumer, Ownable {
     /// @inheritdoc IFarmlyPriceConsumer
     mapping(address => FarmlyAggregator) public override aggregators;
 
@@ -43,5 +43,12 @@ contract FarmlyPriceConsumer is IFarmlyPriceConsumer {
     ) public view override returns (uint256 USDValue) {
         uint256 price = getPrice(token);
         USDValue = FarmlyFullMath.mulDiv(price, amount, 1e18);
+    }
+
+    function setTokenAggregator(
+        address token,
+        FarmlyAggregator memory aggregator
+    ) public override onlyOwner {
+        aggregators[token] = aggregator;
     }
 }
