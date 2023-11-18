@@ -39,6 +39,11 @@ contract FarmlyPositionManager is
     /// Denominator for flyScore
     uint256 constant FLYSCORE_DENOMINATOR = 0x2710; // 1e4
 
+    modifier onlyPositionOwner(uint256 positionID) {
+        require(msg.sender == positions[positionID].owner, "NOT_OWNER");
+        _;
+    }
+
     constructor(
         IFarmlyPriceConsumer _farmlyPriceConsumer,
         IFarmlyConfig _farmlyConfig,
@@ -236,7 +241,13 @@ contract FarmlyPositionManager is
     /// @inheritdoc IFarmlyPositionManagerActions
     function increasePosition(
         IncreasePositionParams calldata params
-    ) public override whenNotPaused nonReentrant {
+    )
+        public
+        override
+        onlyPositionOwner(params.positionID)
+        whenNotPaused
+        nonReentrant
+    {
         Position storage position = positions[params.positionID];
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
@@ -320,7 +331,7 @@ contract FarmlyPositionManager is
     /// @inheritdoc IFarmlyPositionManagerActions
     function decreasePosition(
         DecreasePositionParams calldata params
-    ) public override nonReentrant {
+    ) public override onlyPositionOwner(params.positionID) nonReentrant {
         Position storage position = positions[params.positionID];
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
@@ -396,7 +407,7 @@ contract FarmlyPositionManager is
     /// @inheritdoc IFarmlyPositionManagerActions
     function collectFees(
         CollectFeesParams calldata params
-    ) public override nonReentrant {
+    ) public override onlyPositionOwner(params.positionID) nonReentrant {
         Position storage position = positions[params.positionID];
         (
             uint256 amount0,
@@ -418,7 +429,13 @@ contract FarmlyPositionManager is
     /// @inheritdoc IFarmlyPositionManagerActions
     function collectAndIncrease(
         CollectAndIncreaseParams calldata params
-    ) public override whenNotPaused nonReentrant {
+    )
+        public
+        override
+        onlyPositionOwner(params.positionID)
+        whenNotPaused
+        nonReentrant
+    {
         Position storage position = positions[params.positionID];
         (
             uint256 amount0,
@@ -486,7 +503,7 @@ contract FarmlyPositionManager is
     /// @inheritdoc IFarmlyPositionManagerActions
     function closePosition(
         ClosePositionParams calldata params
-    ) public override nonReentrant {
+    ) public override onlyPositionOwner(params.positionID) nonReentrant {
         Position storage position = positions[params.positionID];
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
