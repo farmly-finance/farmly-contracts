@@ -29,6 +29,17 @@ module.exports = async (hre) => {
         waitConfirmations: 2,
     });
 
+    const isBorrowerForVault1 = await hre.deployments.call("FarmlyVault1", "borrower", farmlyPositionManager.address)
+
+    if (!isBorrowerForVault1)
+        await hre.deployments.execute('FarmlyVault1', { from: deployer }, 'addBorrower', farmlyPositionManager.address);
+
+    const isBorrowerForVault2 = await hre.deployments.call("FarmlyVault2", "borrower", farmlyPositionManager.address)
+
+    if (!isBorrowerForVault2)
+        await hre.deployments.execute('FarmlyVault2', { from: deployer }, 'addBorrower', farmlyPositionManager.address);
+
+
 };
 
 module.exports.tags = ["all", "others"];
