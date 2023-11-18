@@ -241,14 +241,10 @@ contract FarmlyPositionManager is
     /// @inheritdoc IFarmlyPositionManagerActions
     function increasePosition(
         IncreasePositionParams calldata params
-    )
-        public
-        override
-        onlyPositionOwner(params.positionID)
-        whenNotPaused
-        nonReentrant
-    {
+    ) public override whenNotPaused nonReentrant {
         Position storage position = positions[params.positionID];
+
+        require(msg.sender == position.owner, "NOT_OWNER");
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
 
@@ -331,8 +327,10 @@ contract FarmlyPositionManager is
     /// @inheritdoc IFarmlyPositionManagerActions
     function decreasePosition(
         DecreasePositionParams calldata params
-    ) public override onlyPositionOwner(params.positionID) nonReentrant {
+    ) public override nonReentrant {
         Position storage position = positions[params.positionID];
+
+        require(msg.sender == position.owner, "NOT_OWNER");
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
 
@@ -407,8 +405,11 @@ contract FarmlyPositionManager is
     /// @inheritdoc IFarmlyPositionManagerActions
     function collectFees(
         CollectFeesParams calldata params
-    ) public override onlyPositionOwner(params.positionID) nonReentrant {
+    ) public override nonReentrant {
         Position storage position = positions[params.positionID];
+
+        require(msg.sender == position.owner, "NOT_OWNER");
+
         (
             uint256 amount0,
             uint256 amount1,
@@ -429,14 +430,11 @@ contract FarmlyPositionManager is
     /// @inheritdoc IFarmlyPositionManagerActions
     function collectAndIncrease(
         CollectAndIncreaseParams calldata params
-    )
-        public
-        override
-        onlyPositionOwner(params.positionID)
-        whenNotPaused
-        nonReentrant
-    {
+    ) public override whenNotPaused nonReentrant {
         Position storage position = positions[params.positionID];
+
+        require(msg.sender == position.owner, "NOT_OWNER");
+
         (
             uint256 amount0,
             uint256 amount1,
@@ -503,8 +501,10 @@ contract FarmlyPositionManager is
     /// @inheritdoc IFarmlyPositionManagerActions
     function closePosition(
         ClosePositionParams calldata params
-    ) public override onlyPositionOwner(params.positionID) nonReentrant {
+    ) public override nonReentrant {
         Position storage position = positions[params.positionID];
+
+        require(msg.sender == position.owner, "NOT_OWNER");
 
         params.executor.collect(position.uniV3PositionID, msg.sender);
 
