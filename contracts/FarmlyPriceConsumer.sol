@@ -45,6 +45,7 @@ contract FarmlyPriceConsumer is IFarmlyPriceConsumer, Ownable {
         USDValue = FarmlyFullMath.mulDiv(price, amount, 1e18);
     }
 
+    /// @inheritdoc IFarmlyPriceConsumer
     function setTokenAggregator(
         address token,
         FarmlyAggregator memory aggregator
