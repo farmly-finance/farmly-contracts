@@ -33,4 +33,13 @@ interface IFarmlyPriceConsumer {
         address token,
         uint256 amount
     ) external view returns (uint256 USDValue);
+
+    /// @notice Set Chainlink Aggregator for the token
+    /// @dev Can only be called by the owner.
+    /// @param token The token for set aggregator
+    /// @param aggregator The aggregator struct
+    function setTokenAggregator(
+        address token,
+        FarmlyAggregator memory aggregator
+    ) external;
 }
