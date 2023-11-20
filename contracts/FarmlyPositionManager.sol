@@ -169,8 +169,14 @@ contract FarmlyPositionManager is
                 params.amount1
             );
 
-        uint debtShare0 = params.vault0.vault.borrow(params.vault0.debtAmount);
-        uint debtShare1 = params.vault1.vault.borrow(params.vault1.debtAmount);
+        uint debtShare0 = params.vault0.vault.borrow(
+            params.vault0.debtAmount,
+            address(this)
+        );
+        uint debtShare1 = params.vault1.vault.borrow(
+            params.vault1.debtAmount,
+            address(this)
+        );
 
         FarmlyTransferHelper.safeApprove(
             params.positionInfo.token0,
@@ -261,8 +267,14 @@ contract FarmlyPositionManager is
                 params.amount1
             );
 
-        uint debtShare0 = position.debt0.vault.borrow(params.debtAmount0);
-        uint debtShare1 = position.debt1.vault.borrow(params.debtAmount1);
+        uint debtShare0 = position.debt0.vault.borrow(
+            params.debtAmount0,
+            address(this)
+        );
+        uint debtShare1 = position.debt1.vault.borrow(
+            params.debtAmount1,
+            address(this)
+        );
 
         FarmlyTransferHelper.safeApprove(
             token0,
@@ -437,8 +449,14 @@ contract FarmlyPositionManager is
             address token1
         ) = params.executor.collect(position.uniV3PositionID, address(this));
 
-        uint debtShare0 = position.debt0.vault.borrow(params.debt0);
-        uint debtShare1 = position.debt1.vault.borrow(params.debt1);
+        uint debtShare0 = position.debt0.vault.borrow(
+            params.debt0,
+            address(this)
+        );
+        uint debtShare1 = position.debt1.vault.borrow(
+            params.debt1,
+            address(this)
+        );
 
         FarmlyTransferHelper.safeApprove(
             token0,
