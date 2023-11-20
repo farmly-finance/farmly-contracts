@@ -243,42 +243,29 @@ contract FarmlyPositionManager is
             FarmlyTransferHelper.safeTransferFrom(
                 token0,
                 msg.sender,
-                address(this),
+                address(params.executor),
                 params.amount0
             );
         if (params.amount1 > 0)
             FarmlyTransferHelper.safeTransferFrom(
                 token1,
                 msg.sender,
-                address(this),
+                address(params.executor),
                 params.amount1
             );
 
         uint debtShare0 = position.debt0.vault.borrow(
             params.debtAmount0,
-            address(this)
+            address(params.executor)
         );
         uint debtShare1 = position.debt1.vault.borrow(
             params.debtAmount1,
-            address(this)
-        );
-
-        FarmlyTransferHelper.safeApprove(
-            token0,
-            address(params.executor),
-            params.amount0 + params.debtAmount0
-        );
-        FarmlyTransferHelper.safeApprove(
-            token1,
-            address(params.executor),
-            params.amount1 + params.debtAmount1
+            address(params.executor)
         );
 
         params.executor.increase(
             position.uniV3PositionID,
             msg.sender,
-            params.amount0 + params.debtAmount0,
-            params.amount1 + params.debtAmount1,
             params.swapInfo
         );
 
@@ -459,8 +446,6 @@ contract FarmlyPositionManager is
         params.executor.increase(
             position.uniV3PositionID,
             msg.sender,
-            amount0 + params.debt0,
-            amount1 + params.debt1,
             params.swapInfo
         );
 
