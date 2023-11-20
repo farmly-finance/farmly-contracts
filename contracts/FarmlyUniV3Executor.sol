@@ -56,26 +56,9 @@ contract FarmlyUniV3Executor is IFarmlyUniV3Executor, IERC721Receiver {
     /// @inheritdoc IFarmlyUniV3Executor
     function execute(
         address owner,
-        uint256 amount0Has,
-        uint256 amount1Has,
         PositionInfo memory positionInfo,
         SwapInfo memory swapInfo
     ) public override returns (uint256) {
-        if (amount0Has > 0)
-            FarmlyTransferHelper.safeTransferFrom(
-                positionInfo.token0,
-                msg.sender,
-                address(this),
-                amount0Has
-            );
-        if (amount1Has > 0)
-            FarmlyTransferHelper.safeTransferFrom(
-                positionInfo.token1,
-                msg.sender,
-                address(this),
-                amount1Has
-            );
-
         swapExactInput(
             swapInfo.tokenIn,
             swapInfo.tokenOut,
@@ -83,25 +66,9 @@ contract FarmlyUniV3Executor is IFarmlyUniV3Executor, IERC721Receiver {
             positionInfo.poolFee
         );
 
-        IUniswapV3Pool pool = IUniswapV3Pool(
-            factory.getPool(
-                address(positionInfo.token0),
-                address(positionInfo.token1),
-                positionInfo.poolFee
-            )
-        );
-
         (uint256 tokenId, uint256 amount0, uint256 amount1) = add(
             owner,
-            positionInfo.token0 == pool.token0()
-                ? IERC20Metadata(positionInfo.token0)
-                : IERC20Metadata(positionInfo.token1),
-            positionInfo.token1 == pool.token1()
-                ? IERC20Metadata(positionInfo.token1)
-                : IERC20Metadata(positionInfo.token0),
-            positionInfo.poolFee,
-            positionInfo.sqrtRatioAX96,
-            positionInfo.sqrtRatioBX96
+            positionInfo
         );
 
         emit Execute(
@@ -119,8 +86,6 @@ contract FarmlyUniV3Executor is IFarmlyUniV3Executor, IERC721Receiver {
     function increase(
         uint256 uniV3PositionID,
         address owner,
-        uint256 amount0Has,
-        uint256 amount1Has,
         SwapInfo memory swapInfo
     )
         public
@@ -129,20 +94,6 @@ contract FarmlyUniV3Executor is IFarmlyUniV3Executor, IERC721Receiver {
     {
         (address token0, address token1, uint24 fee, , , ) = farmlyUniV3Reader
             .getPositionInfo(uniV3PositionID);
-
-        FarmlyTransferHelper.safeTransferFrom(
-            token0,
-            msg.sender,
-            address(this),
-            amount0Has
-        );
-
-        FarmlyTransferHelper.safeTransferFrom(
-            token1,
-            msg.sender,
-            address(this),
-            amount1Has
-        );
 
         swapExactInput(
             swapInfo.tokenIn,
@@ -439,30 +390,46 @@ contract FarmlyUniV3Executor is IFarmlyUniV3Executor, IERC721Receiver {
     /// by calling to INonfungiblePositionManager
     function add(
         address owner,
-        IERC20Metadata token0,
-        IERC20Metadata token1,
-        uint24 poolFee,
-        uint160 sqrtRatioAX96,
-        uint160 sqrtRatioBX96
+        PositionInfo memory positionInfo
     ) private returns (uint256 tokenId, uint256 amount0, uint256 amount1) {
+        IUniswapV3Pool pool = IUniswapV3Pool(
+            factory.getPool(
+                positionInfo.token0,
+                positionInfo.token1,
+                positionInfo.poolFee
+            )
+        );
+
+        (positionInfo.token0, positionInfo.token1) = positionInfo.token0 ==
+            pool.token0()
+            ? (positionInfo.token0, positionInfo.token1)
+            : (positionInfo.token1, positionInfo.token0);
+
+        IERC20 token0 = IERC20(positionInfo.token0);
+        IERC20 token1 = IERC20(positionInfo.token1);
+
         FarmlyTransferHelper.safeApprove(
-            address(token0),
+            positionInfo.token0,
             address(nonfungiblePositionManager),
             token0.balanceOf(address(this))
         );
         FarmlyTransferHelper.safeApprove(
-            address(token1),
+            address(positionInfo.token1),
             address(nonfungiblePositionManager),
             token1.balanceOf(address(this))
         );
 
         INonfungiblePositionManager.MintParams
             memory params = INonfungiblePositionManager.MintParams({
-                token0: address(token0),
-                token1: address(token1),
-                fee: poolFee,
-                tickLower: TickMath.getTickAtSqrtRatio(sqrtRatioAX96),
-                tickUpper: TickMath.getTickAtSqrtRatio(sqrtRatioBX96),
+                token0: positionInfo.token0,
+                token1: positionInfo.token1,
+                fee: positionInfo.poolFee,
+                tickLower: TickMath.getTickAtSqrtRatio(
+                    positionInfo.sqrtRatioAX96
+                ),
+                tickUpper: TickMath.getTickAtSqrtRatio(
+                    positionInfo.sqrtRatioBX96
+                ),
                 amount0Desired: token0.balanceOf(address(this)),
                 amount1Desired: token1.balanceOf(address(this)),
                 amount0Min: 0,
@@ -475,14 +442,14 @@ contract FarmlyUniV3Executor is IFarmlyUniV3Executor, IERC721Receiver {
 
         if (token0.balanceOf(address(this)) > 0)
             FarmlyTransferHelper.safeTransfer(
-                address(token0),
+                positionInfo.token0,
                 owner,
                 token0.balanceOf(address(this))
             );
 
         if (token1.balanceOf(address(this)) > 0)
             FarmlyTransferHelper.safeTransfer(
-                address(token1),
+                positionInfo.token1,
                 owner,
                 token1.balanceOf(address(this))
             );

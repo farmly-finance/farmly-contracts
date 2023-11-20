@@ -157,7 +157,7 @@ contract FarmlyPositionManager is
             FarmlyTransferHelper.safeTransferFrom(
                 params.positionInfo.token0,
                 msg.sender,
-                address(this),
+                address(params.executor),
                 params.amount0
             );
 
@@ -165,34 +165,21 @@ contract FarmlyPositionManager is
             FarmlyTransferHelper.safeTransferFrom(
                 params.positionInfo.token1,
                 msg.sender,
-                address(this),
+                address(params.executor),
                 params.amount1
             );
 
         uint debtShare0 = params.vault0.vault.borrow(
             params.vault0.debtAmount,
-            address(this)
+            address(params.executor)
         );
         uint debtShare1 = params.vault1.vault.borrow(
             params.vault1.debtAmount,
-            address(this)
-        );
-
-        FarmlyTransferHelper.safeApprove(
-            params.positionInfo.token0,
-            address(params.executor),
-            params.amount0 + params.vault0.debtAmount
-        );
-        FarmlyTransferHelper.safeApprove(
-            params.positionInfo.token1,
-            address(params.executor),
-            params.amount1 + params.vault1.debtAmount
+            address(params.executor)
         );
 
         uint256 tokenId = params.executor.execute(
             msg.sender,
-            params.amount0 + params.vault0.debtAmount,
-            params.amount1 + params.vault1.debtAmount,
             params.positionInfo,
             params.swapInfo
         );
@@ -256,42 +243,29 @@ contract FarmlyPositionManager is
             FarmlyTransferHelper.safeTransferFrom(
                 token0,
                 msg.sender,
-                address(this),
+                address(params.executor),
                 params.amount0
             );
         if (params.amount1 > 0)
             FarmlyTransferHelper.safeTransferFrom(
                 token1,
                 msg.sender,
-                address(this),
+                address(params.executor),
                 params.amount1
             );
 
         uint debtShare0 = position.debt0.vault.borrow(
             params.debtAmount0,
-            address(this)
+            address(params.executor)
         );
         uint debtShare1 = position.debt1.vault.borrow(
             params.debtAmount1,
-            address(this)
-        );
-
-        FarmlyTransferHelper.safeApprove(
-            token0,
-            address(params.executor),
-            params.amount0 + params.debtAmount0
-        );
-        FarmlyTransferHelper.safeApprove(
-            token1,
-            address(params.executor),
-            params.amount1 + params.debtAmount1
+            address(params.executor)
         );
 
         params.executor.increase(
             position.uniV3PositionID,
             msg.sender,
-            params.amount0 + params.debtAmount0,
-            params.amount1 + params.debtAmount1,
             params.swapInfo
         );
 
@@ -447,33 +421,23 @@ contract FarmlyPositionManager is
             uint256 amount1,
             address token0,
             address token1
-        ) = params.executor.collect(position.uniV3PositionID, address(this));
+        ) = params.executor.collect(
+                position.uniV3PositionID,
+                address(params.executor)
+            );
 
         uint debtShare0 = position.debt0.vault.borrow(
             params.debt0,
-            address(this)
+            address(params.executor)
         );
         uint debtShare1 = position.debt1.vault.borrow(
             params.debt1,
-            address(this)
-        );
-
-        FarmlyTransferHelper.safeApprove(
-            token0,
-            address(params.executor),
-            amount0 + params.debt0
-        );
-        FarmlyTransferHelper.safeApprove(
-            token1,
-            address(params.executor),
-            amount1 + params.debt1
+            address(params.executor)
         );
 
         params.executor.increase(
             position.uniV3PositionID,
             msg.sender,
-            amount0 + params.debt0,
-            amount1 + params.debt1,
             params.swapInfo
         );
 
