@@ -375,11 +375,11 @@ contract FarmlyPositionManager is
             amount1
         );
 
-        position.debt0.vault.close(
+        position.debt0.vault.repay(
             (position.debt0.debtShare * params.decreasingPercent) /
                 RATIO_DENOMINATOR
         );
-        position.debt1.vault.close(
+        position.debt1.vault.repay(
             (position.debt1.debtShare * params.decreasingPercent) /
                 RATIO_DENOMINATOR
         );
@@ -544,8 +544,8 @@ contract FarmlyPositionManager is
             amount1
         );
 
-        position.debt0.vault.close(position.debt0.debtShare);
-        position.debt1.vault.close(position.debt1.debtShare);
+        position.debt0.vault.repay(position.debt0.debtShare);
+        position.debt1.vault.repay(position.debt1.debtShare);
 
         FarmlyTransferHelper.safeTransfer(token0, msg.sender, amount0 - debt0);
         FarmlyTransferHelper.safeTransfer(token1, msg.sender, amount1 - debt1);
@@ -600,8 +600,8 @@ contract FarmlyPositionManager is
             amount1
         );
 
-        position.debt0.vault.close(position.debt0.debtShare);
-        position.debt1.vault.close(position.debt1.debtShare);
+        position.debt0.vault.repay(position.debt0.debtShare);
+        position.debt1.vault.repay(position.debt1.debtShare);
 
         FarmlyTransferHelper.safeTransfer(token0, msg.sender, amount0 - debt0);
         FarmlyTransferHelper.safeTransfer(token1, msg.sender, amount1 - debt1);
