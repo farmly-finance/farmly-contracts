@@ -26,11 +26,11 @@ interface IFarmlyVaultActions {
     /// @return Returns debt share
     function borrow(uint256 amount, address to) external returns (uint256);
 
-    /// @notice Close function for closing debt
+    /// @notice Repay function for repaying debt
     /// @dev The amount to be repaid is calculated
     /// and tokens are transferred from the user.
     /// It can only be called by borrowers.
     /// @param amount Amount of debt share to be repaid
     /// @return Returns the amount of debt paid.
-    function close(uint256 amount) external returns (uint256);
+    function repay(uint256 amount) external returns (uint256);
 }
