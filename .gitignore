@@ -107,6 +107,7 @@ build/
 
 node_modules
 .env
+.env_goerli
 coverage
 coverage.json
 typechain
