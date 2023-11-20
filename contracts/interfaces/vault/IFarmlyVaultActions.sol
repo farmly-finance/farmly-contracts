@@ -22,8 +22,9 @@ interface IFarmlyVaultActions {
     /// Transfers the amount borrowed to the user.
     /// It can only be called by borrowers.
     /// @param amount Amount of tokens to borrow
+    /// @param to Address to transfer tokens
     /// @return Returns debt share
-    function borrow(uint256 amount) external returns (uint256);
+    function borrow(uint256 amount, address to) external returns (uint256);
 
     /// @notice Close function for closing debt
     /// @dev The amount to be repaid is calculated

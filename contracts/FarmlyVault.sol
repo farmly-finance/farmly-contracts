@@ -149,15 +149,15 @@ contract FarmlyVault is IFarmlyVault, ERC20, Ownable {
 
     /// @inheritdoc IFarmlyVaultActions
     function borrow(
-        uint256 amount
+        uint256 amount,
+        address to
     ) public override onlyBorrower update(amount) returns (uint256) {
         require(IERC20(token).balanceOf(address(this)) > amount);
 
-        if (amount > 0)
-            FarmlyTransferHelper.safeTransfer(token, msg.sender, amount);
+        if (amount > 0) FarmlyTransferHelper.safeTransfer(token, to, amount);
 
         uint256 debtShare = _addDebt(amount);
-        emit Borrow(msg.sender, amount, debtShare);
+        emit Borrow(to, amount, debtShare);
         return debtShare;
     }
 
