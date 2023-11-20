@@ -28,7 +28,7 @@ module.exports = {
     hardhat: {
       allowUnlimitedContractSize: true,
     },
-    arbitrumOne: {
+    arbitrum_one: {
       url: "https://arb1.arbitrum.io/rpc",
       accounts: [process.env.DEPLOYER_KEY]
     },
@@ -45,6 +45,10 @@ module.exports = {
       accounts: [process.env.DEPLOYER_KEY],
       gas: 3000000
     },
+    arbitrum_goerli: {
+      url: "https://goerli-rollup.arbitrum.io/rpc",
+      accounts: [process.env.DEPLOYER_KEY]
+    }
   },
 
   etherscan: {
