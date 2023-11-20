@@ -178,13 +178,13 @@ contract FarmlyVault is IFarmlyVault, ERC20, Ownable {
     }
 
     /// @inheritdoc IFarmlyVaultOwnerActions
-    function addBorrower(address _borrower) public onlyOwner {
+    function addBorrower(address _borrower) public override onlyOwner {
         borrower[_borrower] = true;
         emit Borrower(_borrower, true);
     }
 
     /// @inheritdoc IFarmlyVaultOwnerActions
-    function removeBorrower(address _borrower) public onlyOwner {
+    function removeBorrower(address _borrower) public override onlyOwner {
         borrower[_borrower] = false;
         emit Borrower(_borrower, false);
     }
