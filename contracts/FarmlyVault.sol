@@ -162,7 +162,7 @@ contract FarmlyVault is IFarmlyVault, ERC20, Ownable {
     }
 
     /// @inheritdoc IFarmlyVaultActions
-    function close(
+    function repay(
         uint256 amount
     )
         public
@@ -173,7 +173,7 @@ contract FarmlyVault is IFarmlyVault, ERC20, Ownable {
         returns (uint256)
     {
         uint256 paidAmount = _removeDebt(amount);
-        emit Close(amount, paidAmount);
+        emit Repay(amount, paidAmount);
         return paidAmount;
     }
 

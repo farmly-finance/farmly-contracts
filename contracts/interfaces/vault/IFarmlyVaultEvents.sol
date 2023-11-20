@@ -22,7 +22,7 @@ interface IFarmlyVaultEvents {
     /// @notice Emitted when a new repay is made.
     /// @param amount Repaid debt share amount
     /// @param paidAmount Repaid debt amount
-    event Close(uint256 amount, uint256 paidAmount);
+    event Repay(uint256 amount, uint256 paidAmount);
 
     /// @notice Emitted when a borrower state changed.
     /// @param borrower The borrower address
