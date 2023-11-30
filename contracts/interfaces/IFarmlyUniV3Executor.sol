@@ -15,8 +15,8 @@ interface IFarmlyUniV3Executor is
         address token0;
         address token1;
         uint24 poolFee;
-        uint160 sqrtRatioAX96;
-        uint160 sqrtRatioBX96;
+        int24 tickLower;
+        int24 tickUpper;
         uint amount0Add;
         uint amount1Add;
     }

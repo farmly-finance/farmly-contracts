@@ -424,12 +424,8 @@ contract FarmlyUniV3Executor is IFarmlyUniV3Executor, IERC721Receiver {
                 token0: positionInfo.token0,
                 token1: positionInfo.token1,
                 fee: positionInfo.poolFee,
-                tickLower: TickMath.getTickAtSqrtRatio(
-                    positionInfo.sqrtRatioAX96
-                ),
-                tickUpper: TickMath.getTickAtSqrtRatio(
-                    positionInfo.sqrtRatioBX96
-                ),
+                tickLower: positionInfo.tickLower,
+                tickUpper: positionInfo.tickUpper,
                 amount0Desired: token0.balanceOf(address(this)),
                 amount1Desired: token1.balanceOf(address(this)),
                 amount0Min: 0,
