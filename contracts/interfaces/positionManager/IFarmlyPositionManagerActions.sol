@@ -16,7 +16,6 @@ interface IFarmlyPositionManagerActions {
         IFarmlyPositionManagerState.VaultInfo vault0;
         IFarmlyPositionManagerState.VaultInfo vault1;
         IFarmlyUniV3Executor.PositionInfo positionInfo;
-        IFarmlyUniV3Executor.SwapInfo swapInfo;
         SlippageProtection slippage;
     }
 
@@ -34,7 +33,6 @@ interface IFarmlyPositionManagerActions {
         uint amount1;
         uint debtAmount0;
         uint debtAmount1;
-        IFarmlyUniV3Executor.SwapInfo swapInfo;
         SlippageProtection slippage;
     }
 
@@ -74,7 +72,6 @@ interface IFarmlyPositionManagerActions {
         uint256 positionID;
         uint256 debt0;
         uint256 debt1;
-        IFarmlyUniV3Executor.SwapInfo swapInfo;
         SlippageProtection slippage;
     }
 

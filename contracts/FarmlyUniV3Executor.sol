@@ -5,13 +5,12 @@ import "./interfaces/IFarmlyUniV3Reader.sol";
 import "./interfaces/IFarmlyConfig.sol";
 
 import "./libraries/FarmlyTransferHelper.sol";
+import "./libraries/FarmlyZapV3.sol";
 
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-
-import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -56,13 +55,26 @@ contract FarmlyUniV3Executor is IFarmlyUniV3Executor, IERC721Receiver {
     /// @inheritdoc IFarmlyUniV3Executor
     function execute(
         address owner,
-        PositionInfo memory positionInfo,
-        SwapInfo memory swapInfo
+        PositionInfo memory positionInfo
     ) public override returns (uint256) {
+        (uint256 amountIn, , bool zeroForOne, ) = FarmlyZapV3.getOptimalSwap(
+            V3PoolCallee.wrap(
+                factory.getPool(
+                    positionInfo.token0,
+                    positionInfo.token1,
+                    positionInfo.poolFee
+                )
+            ),
+            positionInfo.tickLower,
+            positionInfo.tickUpper,
+            positionInfo.amount0Add,
+            positionInfo.amount1Add
+        );
+
         swapExactInput(
-            swapInfo.tokenIn,
-            swapInfo.tokenOut,
-            swapInfo.amountIn,
+            zeroForOne ? positionInfo.token0 : positionInfo.token1,
+            zeroForOne ? positionInfo.token1 : positionInfo.token0,
+            amountIn,
             positionInfo.poolFee
         );
 
@@ -85,20 +97,33 @@ contract FarmlyUniV3Executor is IFarmlyUniV3Executor, IERC721Receiver {
     /// @inheritdoc IFarmlyUniV3Executor
     function increase(
         uint256 uniV3PositionID,
-        address owner,
-        SwapInfo memory swapInfo
+        address owner
     )
         public
         override
         returns (uint128 liquidity, uint256 amount0, uint256 amount1)
     {
-        (address token0, address token1, uint24 fee, , , ) = farmlyUniV3Reader
-            .getPositionInfo(uniV3PositionID);
+        (
+            address token0,
+            address token1,
+            uint24 fee,
+            int24 tickLower,
+            int24 tickUpper,
+
+        ) = farmlyUniV3Reader.getPositionInfo(uniV3PositionID);
+
+        (uint256 amountIn, , bool zeroForOne, ) = FarmlyZapV3.getOptimalSwap(
+            V3PoolCallee.wrap(factory.getPool(token0, token1, fee)),
+            tickLower,
+            tickUpper,
+            IERC20(token0).balanceOf(address(this)),
+            IERC20(token1).balanceOf(address(this))
+        );
 
         swapExactInput(
-            swapInfo.tokenIn,
-            swapInfo.tokenOut,
-            swapInfo.amountIn,
+            zeroForOne ? token0 : token1,
+            zeroForOne ? token1 : token0,
+            amountIn,
             fee
         );
 

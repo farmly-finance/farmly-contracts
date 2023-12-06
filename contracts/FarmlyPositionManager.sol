@@ -180,8 +180,7 @@ contract FarmlyPositionManager is
 
         uint256 tokenId = params.executor.execute(
             msg.sender,
-            params.positionInfo,
-            params.swapInfo
+            params.positionInfo
         );
 
         (, , uint256 positionTotalUSDValue) = farmlyUniV3Reader
@@ -263,11 +262,7 @@ contract FarmlyPositionManager is
             address(params.executor)
         );
 
-        params.executor.increase(
-            position.uniV3PositionID,
-            msg.sender,
-            params.swapInfo
-        );
+        params.executor.increase(position.uniV3PositionID, msg.sender);
 
         (, , uint256 positionTotalUSDValue) = farmlyUniV3Reader
             .getPositionUSDValue(position.uniV3PositionID);
@@ -435,11 +430,7 @@ contract FarmlyPositionManager is
             address(params.executor)
         );
 
-        params.executor.increase(
-            position.uniV3PositionID,
-            msg.sender,
-            params.swapInfo
-        );
+        params.executor.increase(position.uniV3PositionID, msg.sender);
 
         (, , uint256 positionTotalUSDValue) = farmlyUniV3Reader
             .getPositionUSDValue(position.uniV3PositionID);

@@ -21,12 +21,6 @@ interface IFarmlyUniV3Executor is
         uint amount1Add;
     }
 
-    struct SwapInfo {
-        address tokenIn;
-        address tokenOut;
-        uint amountIn;
-    }
-
     /// @notice Creates new Uniswap V3 Position
     /// @dev Creates a new Uniswap V3 position by calling
     /// the Uniswap Nonfungible Position Manager contract.
@@ -35,13 +29,11 @@ interface IFarmlyUniV3Executor is
     /// @param owner Address of the user who created the position.
     /// Not the Farmly position manager!
     /// @param positionInfo All information of the Uniswap V3 position to be created.
-    /// @param swapInfo Information about the swap transaction.
     /// @return tokenId Returns the nft tokenId of the created Uniswap V3 position.
     /// It also represents the Uniswap V3 position id.
     function execute(
         address owner,
-        PositionInfo memory positionInfo,
-        SwapInfo memory swapInfo
+        PositionInfo memory positionInfo
     ) external returns (uint256 tokenId);
 
     /// @notice Increases the existing Uniswap V3 Position.
@@ -51,14 +43,12 @@ interface IFarmlyUniV3Executor is
     /// Returns any excess tokens to the owner when the position is increased.
     /// @param uniV3PositionID Token id of Uniswap V3 position to be increased.
     /// @param owner Address of the position owner
-    /// @param swapInfo Information about the swap transaction.
     /// @return liquidity Amount of position liquidity increased.
     /// @return amount0 Amount of token0 increased
     /// @return amount1 Amount of token1 increased
     function increase(
         uint256 uniV3PositionID,
-        address owner,
-        SwapInfo memory swapInfo
+        address owner
     ) external returns (uint128 liquidity, uint256 amount0, uint256 amount1);
 
     /// @notice Decreases the existing Uniswap V3 Position.
