@@ -21,6 +21,14 @@ interface IFarmlyUniV3Executor is
         uint amount1Add;
     }
 
+    struct SwapInfo {
+        address tokenIn;
+        address tokenOut;
+        uint256 amountIn;
+        uint256 amountOut;
+        uint160 sqrtPriceX96;
+    }
+
     /// @notice Creates new Uniswap V3 Position
     /// @dev Creates a new Uniswap V3 position by calling
     /// the Uniswap Nonfungible Position Manager contract.

@@ -5,7 +5,6 @@ import "./interfaces/IFarmlyUniV3Reader.sol";
 import "./interfaces/IFarmlyConfig.sol";
 
 import "./libraries/FarmlyTransferHelper.sol";
-import "./libraries/FarmlyZapV3.sol";
 
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
@@ -57,24 +56,14 @@ contract FarmlyUniV3Executor is IFarmlyUniV3Executor, IERC721Receiver {
         address owner,
         PositionInfo memory positionInfo
     ) public override returns (uint256) {
-        (uint256 amountIn, , bool zeroForOne, ) = FarmlyZapV3.getOptimalSwap(
-            V3PoolCallee.wrap(
-                factory.getPool(
-                    positionInfo.token0,
-                    positionInfo.token1,
-                    positionInfo.poolFee
-                )
-            ),
-            positionInfo.tickLower,
-            positionInfo.tickUpper,
-            positionInfo.amount0Add,
-            positionInfo.amount1Add
+        (SwapInfo memory swapInfo, , ) = farmlyUniV3Reader.getAmountsForAdd(
+            positionInfo
         );
 
         swapExactInput(
-            zeroForOne ? positionInfo.token0 : positionInfo.token1,
-            zeroForOne ? positionInfo.token1 : positionInfo.token0,
-            amountIn,
+            swapInfo.tokenIn,
+            swapInfo.tokenOut,
+            swapInfo.amountIn,
             positionInfo.poolFee
         );
 
@@ -112,18 +101,22 @@ contract FarmlyUniV3Executor is IFarmlyUniV3Executor, IERC721Receiver {
 
         ) = farmlyUniV3Reader.getPositionInfo(uniV3PositionID);
 
-        (uint256 amountIn, , bool zeroForOne, ) = FarmlyZapV3.getOptimalSwap(
-            V3PoolCallee.wrap(factory.getPool(token0, token1, fee)),
-            tickLower,
-            tickUpper,
-            IERC20(token0).balanceOf(address(this)),
-            IERC20(token1).balanceOf(address(this))
+        (SwapInfo memory swapInfo, , ) = farmlyUniV3Reader.getAmountsForAdd(
+            PositionInfo({
+                token0: token0,
+                token1: token1,
+                poolFee: fee,
+                tickLower: tickLower,
+                tickUpper: tickUpper,
+                amount0Add: IERC20(token0).balanceOf(address(this)),
+                amount1Add: IERC20(token1).balanceOf(address(this))
+            })
         );
 
         swapExactInput(
-            zeroForOne ? token0 : token1,
-            zeroForOne ? token1 : token0,
-            amountIn,
+            swapInfo.tokenIn,
+            swapInfo.tokenOut,
+            swapInfo.amountIn,
             fee
         );
 

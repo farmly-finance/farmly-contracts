@@ -3,6 +3,8 @@ import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.s
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "./IFarmlyPriceConsumer.sol";
 
+import "./IFarmlyUniV3Executor.sol";
+
 /// @title Interface of Farmly Uniswap V3 Reader
 /// @notice Contract interface for reading information of positions on Uniswap V3
 interface IFarmlyUniV3Reader {
@@ -60,4 +62,17 @@ interface IFarmlyUniV3Reader {
         external
         view
         returns (uint256 token0USD, uint256 token1USD, uint256 totalUSD);
+
+    /// @notice Returns token amount of position for add
+    /// @param positionInfo Position info to be created
+    function getAmountsForAdd(
+        IFarmlyUniV3Executor.PositionInfo memory positionInfo
+    )
+        external
+        view
+        returns (
+            IFarmlyUniV3Executor.SwapInfo memory swapInfo,
+            uint256 amount0Add,
+            uint256 amount1Add
+        );
 }

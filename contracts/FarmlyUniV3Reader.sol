@@ -7,6 +7,8 @@ import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 
+import {FarmlyZapV3, V3PoolCallee} from "./libraries/FarmlyZapV3.sol";
+
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "@uniswap/v3-periphery/contracts/libraries/LiquidityAmounts.sol";
 
@@ -106,5 +108,60 @@ contract FarmlyUniV3Reader is IFarmlyUniV3Reader {
         token0USD = farmlyPriceConsumer.calcUSDValue(token0, amount0);
         token1USD = farmlyPriceConsumer.calcUSDValue(token1, amount1);
         totalUSD = token0USD + token1USD;
+    }
+
+    /// @inheritdoc IFarmlyUniV3Reader
+    function getAmountsForAdd(
+        IFarmlyUniV3Executor.PositionInfo memory positionInfo
+    )
+        public
+        view
+        override
+        returns (
+            IFarmlyUniV3Executor.SwapInfo memory swapInfo,
+            uint256 amount0Add,
+            uint256 amount1Add
+        )
+    {
+        address pool = factory.getPool(
+            positionInfo.token0,
+            positionInfo.token1,
+            positionInfo.poolFee
+        );
+
+        (
+            uint256 amountIn,
+            uint256 amountOut,
+            bool zeroForOne,
+            uint160 sqrtPriceX96
+        ) = FarmlyZapV3.getOptimalSwap(
+                V3PoolCallee.wrap(pool),
+                positionInfo.tickLower,
+                positionInfo.tickUpper,
+                positionInfo.amount0Add,
+                positionInfo.amount1Add
+            );
+
+        swapInfo.tokenIn = zeroForOne
+            ? positionInfo.token0
+            : positionInfo.token1;
+
+        swapInfo.tokenOut = zeroForOne
+            ? positionInfo.token1
+            : positionInfo.token0;
+
+        swapInfo.amountIn = amountIn;
+
+        swapInfo.amountOut = amountOut;
+
+        swapInfo.sqrtPriceX96 = sqrtPriceX96;
+
+        amount0Add = zeroForOne
+            ? positionInfo.amount0Add - amountIn
+            : positionInfo.amount0Add + amountOut;
+
+        amount1Add = zeroForOne
+            ? positionInfo.amount1Add + amountOut
+            : positionInfo.amount1Add - amountIn;
     }
 }
