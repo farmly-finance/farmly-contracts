@@ -45,6 +45,10 @@ module.exports = {
       accounts: [process.env.DEPLOYER_KEY],
       gas: 3000000
     },
+    sepolia: {
+      url: "https://sepolia.infura.io/v3/8516a359516c40aba7c35bcf1444218a",
+      accounts: [process.env.DEPLOYER_KEY],
+    },
     arbitrum_goerli: {
       url: "https://goerli-rollup.arbitrum.io/rpc",
       accounts: [process.env.DEPLOYER_KEY]

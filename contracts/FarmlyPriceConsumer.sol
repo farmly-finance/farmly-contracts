@@ -12,16 +12,16 @@ contract FarmlyPriceConsumer is IFarmlyPriceConsumer, Ownable {
     /// Initial state of aggregators
     constructor() {
         aggregators[
-            0x067ADb4d5Ff41068A92D8d6dc103679eEdD07519
+            0x917D6e003A6D7BAb2E17c1c8E27e771e30fFF938
         ] = FarmlyAggregator(
-            AggregatorV3Interface(0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e),
+            AggregatorV3Interface(0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612),
             8
         );
 
         aggregators[
-            0x3ec2e8d6F81cb2b871e451fD368bD9c2b68eA09B
+            0xB5Ed8C7Cef3EA95574187ddc52a56F2Fe6b38ab3
         ] = FarmlyAggregator(
-            AggregatorV3Interface(0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7),
+            AggregatorV3Interface(0x50834F3163758fcC1Df9973b6e91f0F0F0434aD3),
             8
         );
     }

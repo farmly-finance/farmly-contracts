@@ -15,7 +15,7 @@ contract FarmlyConfig is IFarmlyConfig, Ownable {
     uint24 public override liquidationThreshold = 875000;
     /// @inheritdoc IFarmlyConfig
     address public override feeAddress =
-        0x626c414DBE7c333eCd5b5C5F3B8E725c99C6f848;
+        0xd59B898811F88C59E4673789a19Df51347d5Fa4f;
 
     /// @notice Stores interest models of vaults
     mapping(address => IFarmlyInterestModel) private vaultInterestModel;

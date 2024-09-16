@@ -31,7 +31,7 @@
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@tenderly/hardhat-tenderly": "^1.7.0",
-    "hardhat": "^2.13.0",
+    "hardhat": "^2.22.9",
     "hardhat-deploy": "^0.11.43",
     "web3": "^1.9.0"
   }
